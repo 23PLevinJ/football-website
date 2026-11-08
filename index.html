@@ -522,12 +522,14 @@
                     <div>
                         <label class="block text-xs font-semibold text-slate-300 mb-1">Default Formation</label>
                         <select id="team-formation" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
-                            <option value="4-3-3">4-3-3 Attacking</option>
-                            <option value="4-2-3-1">4-2-3-1 Wide</option>
-                            <option value="4-4-2">4-4-2 Classic</option>
-                            <option value="3-5-2">3-5-2 Wingbacks</option>
-                            <option value="5-3-2">5-3-2 Defensive</option>
-                        </select>
+                        <option value="4-3-3">4-3-3 Attacking</option>
+                        <option value="4-2-3-1">4-2-3-1 Wide</option>
+                        <option value="4-4-2">4-4-2 Classic</option>
+                        <option value="3-5-2">3-5-2 Wingbacks</option>
+                        <option value="5-3-2">5-3-2 Defensive</option>
+                        <option value="3-4-3">3-4-3 Wide</option>
+                        <option value="CUSTOM">Custom Setup</option>
+                    </select>
                     </div>
                 </div>
                 <div>
@@ -556,23 +558,28 @@
             <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-2 border-b border-slate-800 pb-4">
                 <div>
                     <h3 id="tactics-team-title" class="text-xl font-bold text-white">Tactical Pitch Studio</h3>
-                    <p class="text-xs text-slate-400">Configure 11-player starting XI tactics & player positions</p>
+                    <p class="text-xs text-slate-400">Configure 11-player starting XI tactics & drag nodes to set custom positions</p>
                 </div>
-                <div class="flex items-center space-x-3">
+                <div class="flex flex-wrap items-center gap-2">
                     <select id="tactics-formation-select" onchange="changeTacticsFormation(this.value)" class="bg-slate-950 border border-slate-700 text-xs font-mono font-bold text-brand-400 rounded-xl px-3 py-1.5">
                         <option value="4-3-3">4-3-3</option>
                         <option value="4-2-3-1">4-2-3-1</option>
                         <option value="4-4-2">4-4-2</option>
                         <option value="3-5-2">3-5-2</option>
                         <option value="5-3-2">5-3-2</option>
+                        <option value="3-4-3">3-4-3</option>
+                        <option value="CUSTOM">Custom Setup</option>
                     </select>
+                    <button onclick="saveCustomFormation()" class="px-3 py-1.5 bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs rounded-xl transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-floppy-disk"></i> Save Pitch Layout
+                    </button>
                 </div>
             </div>
 
             <!-- Pitch Visual Container -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <!-- Grass Field Graphics (2/3) -->
-                <div class="lg:col-span-2 pitch-bg rounded-2xl h-[480px] p-4 relative border-2 border-white/20 shadow-2xl overflow-hidden flex flex-col justify-between" id="pitch-container">
+                <div class="lg:col-span-2 pitch-bg rounded-2xl h-[480px] p-4 relative border-2 border-white/20 shadow-2xl overflow-hidden flex flex-col justify-between select-none" id="pitch-container" onmousemove="handlePitchMouseMove(event)" onmouseup="handlePitchMouseUp()" onmouseleave="handlePitchMouseUp()" ontouchmove="handlePitchTouchMove(event)" ontouchend="handlePitchMouseUp()">
                     <!-- Pitch Markings Overlay -->
                     <div class="absolute inset-x-0 top-0 h-16 border-b-2 border-white/30 rounded-b-full pointer-events-none"></div>
                     <div class="absolute inset-x-0 bottom-0 h-16 border-t-2 border-white/30 rounded-t-full pointer-events-none"></div>
@@ -580,6 +587,11 @@
                     <div class="absolute inset-y-[40%] right-0 w-8 border-l-2 border-white/30 pointer-events-none"></div>
                     <div class="absolute inset-0 m-auto w-32 h-32 border-2 border-white/30 rounded-full pointer-events-none"></div>
                     <div class="absolute inset-x-0 top-1/2 border-b border-white/20 pointer-events-none"></div>
+
+                    <!-- Dynamic Drag Instruction Badge -->
+                    <div class="absolute top-2 left-2 z-20 bg-slate-950/80 backdrop-blur-sm border border-slate-800 rounded-lg px-2.5 py-1 text-[10px] font-mono text-brand-400 flex items-center gap-1.5 pointer-events-none">
+                        <i class="fa-solid fa-hand-pointer animate-bounce"></i> Drag any player node to position anywhere
+                    </div>
 
                     <!-- Tactical Starting XI Slots Rendered via JS -->
                     <div id="pitch-slots" class="w-full h-full relative z-10">
@@ -798,6 +810,7 @@
 
         // Active state helpers for tactics studio
         let activeTacticsTeamId = null;
+        let draggingSlotIdx = null;
 
         // Default Initial Demo Seed Data
         function getInitialDemoData() {
@@ -1609,6 +1622,19 @@
                 { pos: 'CM', top: 46, left: 72 },
                 { pos: 'ST', top: 16, left: 38 },
                 { pos: 'ST', top: 16, left: 62 }
+            ],
+            '3-4-3': [
+                { pos: 'GK', top: 88, left: 50 },
+                { pos: 'CB', top: 74, left: 25 },
+                { pos: 'CB', top: 76, left: 50 },
+                { pos: 'CB', top: 74, left: 75 },
+                { pos: 'LM', top: 45, left: 15 },
+                { pos: 'CM', top: 48, left: 38 },
+                { pos: 'CM', top: 48, left: 62 },
+                { pos: 'RM', top: 45, left: 85 },
+                { pos: 'LW', top: 18, left: 20 },
+                { pos: 'ST', top: 14, left: 50 },
+                { pos: 'RW', top: 18, left: 80 }
             ]
         };
 
@@ -1617,7 +1643,7 @@
             const team = appData.teams.find(t => t.id === teamId);
             if (!team) return;
 
-            document.getElementById('tactics-team-title').innerText = `${team.name} • Tactics Board`;
+            document.getElementById('tactics-team-title').innerText = `${team.name} • Tactical Pitch Board`;
             document.getElementById('tactics-formation-select').value = team.formation || '4-3-3';
             
             renderTacticsPitch();
@@ -1628,8 +1654,129 @@
             const team = appData.teams.find(t => t.id === activeTacticsTeamId);
             if (team) {
                 team.formation = fmt;
+                if (fmt !== 'CUSTOM' && formationCoordinates[fmt]) {
+                    team.customCoordinates = JSON.parse(JSON.stringify(formationCoordinates[fmt]));
+                }
                 saveDatabase();
                 renderTacticsPitch();
+            }
+        }
+
+        function getTeamPitchSlots(team) {
+            const fmt = team.formation || '4-3-3';
+            if (team.customCoordinates && team.customCoordinates.length === 11) {
+                return team.customCoordinates;
+            }
+            if (formationCoordinates[fmt]) {
+                return JSON.parse(JSON.stringify(formationCoordinates[fmt]));
+            }
+            return JSON.parse(JSON.stringify(formationCoordinates['4-3-3']));
+        }
+
+        function renderTacticsPitch() {
+            const team = appData.teams.find(t => t.id === activeTacticsTeamId);
+            if (!team) return;
+
+            const slots = getTeamPitchSlots(team);
+            const pitchSlots = document.getElementById('pitch-slots');
+            const assigner = document.getElementById('tactics-squad-assigner');
+            
+            pitchSlots.innerHTML = '';
+            assigner.innerHTML = '';
+
+            const squadPlayers = appData.players.filter(p => p.seasonId === appData.activeSeasonId && p.teamId === team.id);
+
+            slots.forEach((s, idx) => {
+                const slotKey = `pos-${idx + 1}`;
+                const assignedPlayerId = team.lineup ? team.lineup[slotKey] : null;
+                const assignedPlayer = squadPlayers.find(p => p.id === assignedPlayerId);
+
+                // Render Slot Pin on Pitch with Drag Handling
+                pitchSlots.innerHTML += `
+                    <div class="absolute transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center group cursor-grab active:cursor-grabbing z-20"
+                         style="top: ${s.top}%; left: ${s.left}%;"
+                         onmousedown="startPitchDrag(event, ${idx})"
+                         ontouchstart="startPitchDrag(event, ${idx})">
+                        <div class="w-9 h-9 rounded-full bg-slate-950 border-2 border-brand-400 text-white font-mono font-bold text-xs flex items-center justify-center shadow-2xl group-hover:scale-110 group-hover:border-brand-accent transition-transform">
+                            ${assignedPlayer ? (assignedPlayer.number || s.pos) : s.pos}
+                        </div>
+                        <span class="mt-1 px-2 py-0.5 rounded bg-slate-950/90 text-[10px] font-bold text-white font-mono border border-slate-700 whitespace-nowrap shadow-lg">
+                            ${assignedPlayer ? assignedPlayer.name : s.pos}
+                        </span>
+                    </div>
+                `;
+
+                // Render Squad Selector Option in side panel
+                assigner.innerHTML += `
+                    <div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800 flex items-center justify-between">
+                        <span class="text-xs font-mono font-bold text-brand-400 w-12">${s.pos}</span>
+                        <select onchange="assignTacticsPlayer('${slotKey}', this.value)" class="bg-slate-950 border border-slate-700 text-xs text-white rounded-lg px-2 py-1 focus:outline-none flex-grow ml-2">
+                            <option value="">-- Unassigned --</option>
+                            ${squadPlayers.map(p => `
+                                <option value="${p.id}" ${p.id === assignedPlayerId ? 'selected' : ''}>#${p.number} ${p.name} (${p.primaryPos})</option>
+                            `).join('')}
+                        </select>
+                    </div>
+                `;
+            });
+        }
+
+        // --- Pitch Drag and Drop Handlers ---
+        function startPitchDrag(e, idx) {
+            e.stopPropagation();
+            draggingSlotIdx = idx;
+        }
+
+        function updateNodePosition(clientX, clientY) {
+            if (draggingSlotIdx === null || !activeTacticsTeamId) return;
+            const container = document.getElementById('pitch-container');
+            const rect = container.getBoundingClientRect();
+            
+            let xPct = ((clientX - rect.left) / rect.width) * 100;
+            let yPct = ((clientY - rect.top) / rect.height) * 100;
+
+            xPct = Math.max(5, Math.min(95, xPct));
+            yPct = Math.max(5, Math.min(95, yPct));
+
+            const team = appData.teams.find(t => t.id === activeTacticsTeamId);
+            if (!team) return;
+
+            if (!team.customCoordinates || team.customCoordinates.length !== 11) {
+                team.customCoordinates = getTeamPitchSlots(team);
+            }
+
+            team.customCoordinates[draggingSlotIdx].left = Math.round(xPct);
+            team.customCoordinates[draggingSlotIdx].top = Math.round(yPct);
+            team.formation = 'CUSTOM';
+            document.getElementById('tactics-formation-select').value = 'CUSTOM';
+
+            renderTacticsPitch();
+        }
+
+        function handlePitchMouseMove(e) {
+            if (draggingSlotIdx !== null) {
+                updateNodePosition(e.clientX, e.clientY);
+            }
+        }
+
+        function handlePitchTouchMove(e) {
+            if (draggingSlotIdx !== null && e.touches.length > 0) {
+                updateNodePosition(e.touches[0].clientX, e.touches[0].clientY);
+            }
+        }
+
+        function handlePitchMouseUp() {
+            if (draggingSlotIdx !== null) {
+                draggingSlotIdx = null;
+                saveDatabase();
+            }
+        }
+
+        function saveCustomFormation() {
+            const team = appData.teams.find(t => t.id === activeTacticsTeamId);
+            if (team) {
+                saveDatabase();
+                showToast(`Custom pitch layout saved for ${team.name}.`);
             }
         }
 
