@@ -3,10 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PitchMaster Pro - Football Manager</title>
-    <!-- Tailwind CSS CDN -->
+    <title>PitchMaster Football Manager</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome CDN -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         .pitch-bg {
@@ -17,57 +15,48 @@
                 linear-gradient(to bottom, rgba(255,255,255,0.1) 1px, transparent 1px);
             background-size: 40px 40px, 20px 20px, 20px 20px;
         }
-        .pitch-line {
-            border: 2px solid rgba(255, 255, 255, 0.4);
-        }
-        .pitch-circle {
-            border: 2px solid rgba(255, 255, 255, 0.4);
-            border-radius: 50%;
-        }
-        .draggable-node {
-            touch-action: none;
-            user-select: none;
-        }
+        .pitch-line { border: 2px solid rgba(255, 255, 255, 0.4); }
+        .pitch-circle { border: 2px solid rgba(255, 255, 255, 0.4); border-radius: 50%; }
+        .draggable-node { touch-action: none; user-select: none; }
     </style>
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen font-sans flex flex-col">
 
     <!-- Header / Navigation -->
-    <header class="bg-slate-800 border-b border-slate-700 sticky top-0 z-30">
+    <header class="bg-slate-800 border-b border-slate-700 sticky top-0 z-30 shadow-lg">
         <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-4">
             <div class="flex items-center gap-3">
                 <i class="fa-solid fa-shield-halved text-emerald-400 text-2xl"></i>
                 <h1 class="font-bold text-xl tracking-wide bg-gradient-to-r from-emerald-400 to-teal-200 bg-clip-text text-transparent">PitchMaster Pro</h1>
             </div>
 
-            <!-- Season Selector & Actions -->
+            <!-- Season Selector & Data Actions -->
             <div class="flex items-center gap-3">
                 <div class="flex items-center gap-2 bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-700">
                     <i class="fa-regular fa-calendar-days text-emerald-400"></i>
                     <select id="seasonSelect" onchange="switchSeason(this.value)" class="bg-transparent text-sm text-slate-200 focus:outline-none cursor-pointer">
-                        <!-- Populated via JS -->
                     </select>
                 </div>
-                <button onclick="openSeasonManager()" class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-xs font-semibold rounded-lg border border-slate-600 transition">
-                    <i class="fa-solid fa-sliders mr-1 text-emerald-400"></i> Manage Seasons
+                <button onclick="openSeasonManager()" class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-xs font-semibold rounded-lg border border-slate-600 transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-sliders text-emerald-400"></i> Manage Seasons
                 </button>
-                <button onclick="exportData()" class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-xs font-semibold rounded-lg border border-slate-600 transition">
-                    <i class="fa-solid fa-download mr-1 text-blue-400"></i> Export JSON
+                <button onclick="exportData()" class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-xs font-semibold rounded-lg border border-slate-600 transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-download text-blue-400"></i> Export JSON
                 </button>
-                <label class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-xs font-semibold rounded-lg border border-slate-600 transition cursor-pointer">
-                    <i class="fa-solid fa-upload mr-1 text-purple-400"></i> Import JSON
+                <label class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-xs font-semibold rounded-lg border border-slate-600 transition cursor-pointer flex items-center gap-1.5">
+                    <i class="fa-solid fa-upload text-purple-400"></i> Import JSON
                     <input type="file" id="importInput" onchange="importData(event)" class="hidden" accept=".json">
                 </label>
             </div>
         </div>
 
         <!-- Navigation Tabs -->
-        <nav class="max-w-7xl mx-auto px-4 flex gap-1 border-t border-slate-700/50 pt-1">
+        <nav class="max-w-7xl mx-auto px-4 flex gap-2 border-t border-slate-700/50 pt-2">
             <button onclick="switchTab('competitions')" id="tab-competitions" class="tab-btn px-4 py-2 text-sm font-medium rounded-t-lg transition border-b-2 border-emerald-400 text-emerald-400 bg-slate-800">
-                <i class="fa-solid fa-trophy mr-1.5"></i> Competitions & Leagues
+                <i class="fa-solid fa-trophy mr-1.5"></i> Competitions & Standings
             </button>
             <button onclick="switchTab('teams')" id="tab-teams" class="tab-btn px-4 py-2 text-sm font-medium rounded-t-lg transition text-slate-400 hover:text-slate-200">
-                <i class="fa-solid fa-shirt mr-1.5"></i> Teams & Tactics
+                <i class="fa-solid fa-shirt mr-1.5"></i> Teams & Tactical Pitch
             </button>
             <button onclick="switchTab('players')" id="tab-players" class="tab-btn px-4 py-2 text-sm font-medium rounded-t-lg transition text-slate-400 hover:text-slate-200">
                 <i class="fa-solid fa-user-group mr-1.5"></i> Player Roster
@@ -89,26 +78,23 @@
                     <i class="fa-solid fa-plus"></i> Add Competition
                 </button>
             </div>
-            <div id="competitionsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <!-- Rendered dynamically -->
-            </div>
+            <div id="competitionsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
         </section>
 
-        <!-- SECTION: Teams & Tactics -->
+        <!-- SECTION: Teams & Tactics Pitch -->
         <section id="sec-teams" class="tab-content hidden space-y-6">
             <div class="flex justify-between items-center">
-                <h2 class="text-xl font-bold text-slate-100"><i class="fa-solid fa-shirt text-emerald-400 mr-2"></i> Teams & Tactical Studio</h2>
+                <h2 class="text-xl font-bold text-slate-100"><i class="fa-solid fa-shirt text-emerald-400 mr-2"></i> Tactical Pitch & Teams</h2>
                 <button onclick="openTeamModal()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 font-semibold text-sm rounded-lg shadow transition flex items-center gap-2">
                     <i class="fa-solid fa-plus"></i> Add Team
                 </button>
             </div>
 
-            <!-- Team Selector for Tactics Pitch -->
+            <!-- Pitch Control Header -->
             <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 flex flex-wrap items-center justify-between gap-4">
                 <div class="flex items-center gap-3">
-                    <label class="text-sm font-semibold text-slate-300">Select Active Team Pitch:</label>
+                    <label class="text-sm font-semibold text-slate-300">Active Pitch Team:</label>
                     <select id="tacticsTeamSelect" onchange="loadTeamPitch(this.value)" class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-slate-200 focus:outline-none">
-                        <!-- Populated dynamically -->
                     </select>
                 </div>
                 <div class="flex items-center gap-3">
@@ -124,50 +110,41 @@
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <!-- Tactical Pitch Studio -->
+                <!-- Interactive Pitch -->
                 <div class="lg:col-span-2 bg-slate-800 p-4 rounded-xl border border-slate-700">
                     <div class="flex justify-between items-center mb-3">
                         <h3 class="text-base font-bold text-emerald-400 flex items-center gap-2">
-                            <i class="fa-solid fa-compass-drafting"></i> Dynamic Tactical Pitch Studio
+                            <i class="fa-solid fa-compass-drafting"></i> Interactive Tactical Pitch Studio
                         </h3>
-                        <span class="text-xs text-slate-400">Drag nodes anywhere on the field</span>
+                        <span class="text-xs text-slate-400">Drag position nodes anywhere</span>
                     </div>
 
-                    <!-- Pitch Canvas Area -->
                     <div id="tacticalPitch" class="pitch-bg relative w-full h-[520px] rounded-lg border-2 border-slate-600 overflow-hidden select-none">
-                        <!-- Markings -->
                         <div class="absolute inset-x-0 top-1/2 -translate-y-1/2 pitch-line"></div>
                         <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-28 h-28 pitch-circle"></div>
                         <div class="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-24 border-b-2 border-x-2 border-white/40"></div>
                         <div class="absolute bottom-0 left-1/2 -translate-x-1/2 w-48 h-24 border-t-2 border-x-2 border-white/40"></div>
                         
-                        <!-- Draggable Nodes Container -->
-                        <div id="pitchNodesContainer" class="absolute inset-0">
-                            <!-- Populated dynamically -->
-                        </div>
+                        <div id="pitchNodesContainer" class="absolute inset-0"></div>
                     </div>
                 </div>
 
-                <!-- Squad List & Position Customizer -->
+                <!-- Position Customizer Panel -->
                 <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 flex flex-col justify-between">
                     <div>
-                        <h3 class="text-base font-bold text-slate-200 mb-3"><i class="fa-solid fa-list-check text-emerald-400 mr-2"></i> Pitch Slot & Position Customizer</h3>
-                        <div id="positionCustomizerList" class="space-y-2 max-h-[420px] overflow-y-auto pr-1">
-                            <!-- Populated dynamically -->
-                        </div>
+                        <h3 class="text-base font-bold text-slate-200 mb-3"><i class="fa-solid fa-pen-to-square text-emerald-400 mr-2"></i> Dynamic Position Names</h3>
+                        <div id="positionCustomizerList" class="space-y-2 max-h-[420px] overflow-y-auto pr-1"></div>
                     </div>
-                    <button onclick="saveCustomTactics()" class="w-full mt-4 py-2 bg-emerald-600 hover:bg-emerald-500 font-bold text-sm rounded-lg transition">
-                        <i class="fa-solid fa-floppy-disk mr-1"></i> Save Tactical Setup
+                    <button onclick="saveCustomTactics()" class="w-full mt-4 py-2 bg-emerald-600 hover:bg-emerald-500 font-bold text-sm rounded-lg transition shadow">
+                        <i class="fa-solid fa-floppy-disk mr-1"></i> Save Tactical Pitch Setup
                     </button>
                 </div>
             </div>
 
-            <!-- Teams List Grid -->
+            <!-- Team Cards Directory -->
             <div class="mt-8">
-                <h3 class="text-lg font-bold text-slate-200 mb-4"><i class="fa-solid fa-shield-halved text-emerald-400 mr-2"></i> Team Directory</h3>
-                <div id="teamsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <!-- Populated dynamically -->
-                </div>
+                <h3 class="text-lg font-bold text-slate-200 mb-4"><i class="fa-solid fa-shield-halved text-emerald-400 mr-2"></i> Teams Directory</h3>
+                <div id="teamsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"></div>
             </div>
         </section>
 
@@ -180,51 +157,38 @@
                 </button>
             </div>
 
-            <!-- Filters -->
             <div class="flex flex-wrap gap-4 bg-slate-800 p-4 rounded-xl border border-slate-700">
                 <input type="text" id="playerSearch" oninput="renderPlayers()" placeholder="Search player name..." class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-slate-200 focus:outline-none flex-grow">
-                <select id="playerTeamFilter" onchange="renderPlayers()" class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-slate-200 focus:outline-none">
-                    <option value="ALL">All Teams</option>
-                </select>
             </div>
 
-            <!-- Players Cards Grid -->
-            <div id="playersGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <!-- Populated dynamically -->
-            </div>
+            <div id="playersGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"></div>
         </section>
 
         <!-- SECTION: Match Logs -->
         <section id="sec-matches" class="tab-content hidden space-y-6">
             <div class="flex justify-between items-center">
-                <h2 class="text-xl font-bold text-slate-100"><i class="fa-solid fa-stopwatch text-purple-400 mr-2"></i> Match Logs & Stats</h2>
+                <h2 class="text-xl font-bold text-slate-100"><i class="fa-solid fa-stopwatch text-purple-400 mr-2"></i> Match Logs</h2>
                 <button onclick="openMatchModal()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 font-semibold text-sm rounded-lg shadow transition flex items-center gap-2">
                     <i class="fa-solid fa-plus"></i> Record Match
                 </button>
             </div>
-
-            <div id="matchesList" class="space-y-4">
-                <!-- Populated dynamically -->
-            </div>
+            <div id="matchesList" class="space-y-4"></div>
         </section>
-
     </main>
 
-    <!-- MODAL: Manage Seasons -->
+    <!-- MODAL: Manage Seasons (with explicit Delete Button) -->
     <div id="seasonModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
-        <div class="bg-slate-800 rounded-2xl border border-slate-700 w-full max-w-lg p-6 space-y-4">
+        <div class="bg-slate-800 rounded-2xl border border-slate-700 w-full max-w-lg p-6 space-y-4 shadow-2xl">
             <div class="flex justify-between items-center border-b border-slate-700 pb-3">
                 <h3 class="text-lg font-bold text-slate-100"><i class="fa-solid fa-sliders text-emerald-400 mr-2"></i> Manage Seasons</h3>
                 <button onclick="closeSeasonModal()" class="text-slate-400 hover:text-slate-200"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
             
-            <div id="seasonsListContainer" class="space-y-3 max-h-60 overflow-y-auto pr-1">
-                <!-- Populated dynamically -->
-            </div>
+            <div id="seasonsListContainer" class="space-y-3 max-h-60 overflow-y-auto pr-1"></div>
 
             <div class="flex gap-2 pt-2 border-t border-slate-700">
                 <input type="text" id="newSeasonName" placeholder="New Season (e.g. 2026/27)" class="flex-grow bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200">
-                <button onclick="addSeason()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 font-bold text-sm rounded-lg transition">Add</button>
+                <button onclick="addSeason()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 font-bold text-sm rounded-lg transition">Add Season</button>
             </div>
         </div>
     </div>
@@ -268,7 +232,7 @@
     <div id="teamModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
         <div class="bg-slate-800 rounded-2xl border border-slate-700 w-full max-w-md p-6 space-y-4">
             <div class="flex justify-between items-center border-b border-slate-700 pb-3">
-                <h3 class="text-lg font-bold text-slate-100" id="teamModalTitle">Add Team</h3>
+                <h3 class="text-lg font-bold text-slate-100">Add Team</h3>
                 <button onclick="closeTeamModal()" class="text-slate-400 hover:text-slate-200"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
             <form id="teamForm" onsubmit="saveTeam(event)" class="space-y-4">
@@ -278,13 +242,12 @@
                     <input type="text" id="teamName" required placeholder="Arsenal FC" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200">
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-slate-400 mb-1">Competition / League</label>
+                    <label class="block text-xs font-semibold text-slate-400 mb-1">Competition</label>
                     <select id="teamCompId" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200">
-                        <!-- Populated dynamically -->
                     </select>
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-slate-400 mb-1">Logo / Badge URL</label>
+                    <label class="block text-xs font-semibold text-slate-400 mb-1">Logo URL</label>
                     <input type="url" id="teamLogo" placeholder="https://..." class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200">
                 </div>
                 <div class="flex justify-end gap-3 pt-4">
@@ -299,7 +262,7 @@
     <div id="playerModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
         <div class="bg-slate-800 rounded-2xl border border-slate-700 w-full max-w-md p-6 space-y-4">
             <div class="flex justify-between items-center border-b border-slate-700 pb-3">
-                <h3 class="text-lg font-bold text-slate-100" id="playerModalTitle">Add Player</h3>
+                <h3 class="text-lg font-bold text-slate-100">Add Player</h3>
                 <button onclick="closePlayerModal()" class="text-slate-400 hover:text-slate-200"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
             <form id="playerForm" onsubmit="savePlayer(event)" class="space-y-4">
@@ -312,11 +275,10 @@
                     <div>
                         <label class="block text-xs font-semibold text-slate-400 mb-1">Team</label>
                         <select id="playerTeamId" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200">
-                            <!-- Populated dynamically -->
                         </select>
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold text-slate-400 mb-1">Number</label>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">Squad Number</label>
                         <input type="number" id="playerNumber" value="7" min="1" max="99" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200">
                     </div>
                 </div>
@@ -336,7 +298,7 @@
         </div>
     </div>
 
-    <!-- MODAL: Player Profile View -->
+    <!-- MODAL: Full Player Profile View -->
     <div id="playerProfileModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
         <div class="bg-slate-800 rounded-2xl border border-slate-700 w-full max-w-md p-6 space-y-4">
             <div class="flex justify-between items-start border-b border-slate-700 pb-3">
@@ -372,9 +334,8 @@
         </div>
     </div>
 
-    <!-- Application Script -->
+    <!-- Application Engine Logic -->
     <script>
-        // Core State
         let state = {
             activeSeason: "2026/27",
             seasons: ["2026/27", "2025/26"],
@@ -389,10 +350,9 @@
                 { id: "p1", name: "Bukayo Saka", teamId: "t1", position: "RW", number: 7, photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Bukayo_Saka.jpg/440px-Bukayo_Saka.jpg" }
             ],
             matches: [],
-            tactics: {} // teamId -> positions setup
+            tactics: {}
         };
 
-        // Initialize App
         window.addEventListener('DOMContentLoaded', () => {
             loadLocalStorage();
             renderSeasonsDropdown();
@@ -403,7 +363,6 @@
             loadTeamPitch(state.teams[0]?.id || "");
         });
 
-        // Local Storage Helpers
         function saveLocalStorage() {
             localStorage.setItem('pitchmaster_data', JSON.stringify(state));
         }
@@ -411,15 +370,10 @@
         function loadLocalStorage() {
             const data = localStorage.getItem('pitchmaster_data');
             if (data) {
-                try {
-                    state = JSON.parse(data);
-                } catch(e) {
-                    console.error("Could not parse saved data", e);
-                }
+                try { state = JSON.parse(data); } catch(e) {}
             }
         }
 
-        // Tab Navigation
         function switchTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
             document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -432,7 +386,7 @@
             activeBtn.classList.remove('text-slate-400');
         }
 
-        // Seasons Management
+        // Season Management Engine
         function renderSeasonsDropdown() {
             const select = document.getElementById('seasonSelect');
             select.innerHTML = state.seasons.map(s => 
@@ -466,7 +420,7 @@
                     <div class="flex items-center gap-2">
                         ${index > 0 ? `<button onclick="moveSeason(${index}, -1)" class="px-2 py-1 bg-slate-800 text-slate-300 hover:text-white rounded"><i class="fa-solid fa-arrow-up text-xs"></i></button>` : ''}
                         ${index < state.seasons.length - 1 ? `<button onclick="moveSeason(${index}, 1)" class="px-2 py-1 bg-slate-800 text-slate-300 hover:text-white rounded"><i class="fa-solid fa-arrow-down text-xs"></i></button>` : ''}
-                        <button onclick="deleteSeason('${season}')" class="px-3 py-1 bg-red-600 hover:bg-red-500 text-white font-bold text-xs rounded transition flex items-center gap-1">
+                        <button onclick="deleteSeason('${season}')" class="px-3 py-1 bg-red-600 hover:bg-red-500 text-white font-bold text-xs rounded transition flex items-center gap-1 shadow">
                             <i class="fa-solid fa-trash-can"></i> Delete
                         </button>
                     </div>
@@ -503,7 +457,7 @@
 
         function deleteSeason(seasonName) {
             if (state.seasons.length <= 1) {
-                alert("You must keep at least one season.");
+                alert("You must keep at least one season active.");
                 return;
             }
             if (confirm(`Are you sure you want to delete ${seasonName}?`)) {
@@ -519,26 +473,24 @@
             }
         }
 
-        // Competitions CRUD
+        // Competitions Engine
         function renderCompetitions() {
             const grid = document.getElementById('competitionsGrid');
             const comps = state.competitions.filter(c => c.season === state.activeSeason);
             
             if (comps.length === 0) {
-                grid.innerHTML = `<div class="col-span-full text-center py-8 text-slate-500">No competitions for ${state.activeSeason}. Click "Add Competition" to start.</div>`;
+                grid.innerHTML = `<div class="col-span-full text-center py-8 text-slate-500">No competitions found for ${state.activeSeason}.</div>`;
                 return;
             }
 
             grid.innerHTML = comps.map(c => `
-                <div class="bg-slate-800 p-5 rounded-2xl border border-slate-700 flex flex-col justify-between">
+                <div class="bg-slate-800 p-5 rounded-2xl border border-slate-700 flex flex-col justify-between shadow-md">
                     <div>
                         <div class="flex justify-between items-start mb-4">
                             <h3 class="font-bold text-lg text-slate-100">${c.name}</h3>
-                            <div class="flex gap-2">
-                                <button onclick="deleteCompetition('${c.id}')" class="px-2.5 py-1.5 bg-red-600/20 border border-red-500/40 text-red-400 hover:bg-red-600 hover:text-white rounded-lg text-xs font-bold transition flex items-center gap-1">
-                                    <i class="fa-solid fa-trash-can"></i> Delete
-                                </button>
-                            </div>
+                            <button onclick="deleteCompetition('${c.id}')" class="px-2.5 py-1.5 bg-red-600/20 border border-red-500/40 text-red-400 hover:bg-red-600 hover:text-white rounded-lg text-xs font-bold transition flex items-center gap-1">
+                                <i class="fa-solid fa-trash-can"></i> Delete
+                            </button>
                         </div>
                         <div class="text-xs text-slate-400 space-y-1">
                             <p>Win: <span class="text-emerald-400 font-bold">${c.winPts} pts</span> | Draw: <span class="text-amber-400 font-bold">${c.drawPts} pts</span> | Loss: <span class="text-red-400 font-bold">${c.lossPts} pts</span></p>
@@ -569,14 +521,9 @@
                 lossPts: parseInt(document.getElementById('compLossPts').value),
                 season: state.activeSeason
             };
-
-            const existingIdx = state.competitions.findIndex(c => c.id === id);
-            if (existingIdx > -1) {
-                state.competitions[existingIdx] = comp;
-            } else {
-                state.competitions.push(comp);
-            }
-
+            const idx = state.competitions.findIndex(c => c.id === id);
+            if (idx > -1) state.competitions[idx] = comp;
+            else state.competitions.push(comp);
             saveLocalStorage();
             closeCompModal();
             renderCompetitions();
@@ -590,12 +537,11 @@
             }
         }
 
-        // Teams & Tactics CRUD
+        // Teams & Pitch Engine
         function renderTeams() {
             const grid = document.getElementById('teamsGrid');
             const teams = state.teams.filter(t => t.season === state.activeSeason);
             
-            // Populate select dropdowns
             const select = document.getElementById('tacticsTeamSelect');
             select.innerHTML = teams.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
 
@@ -642,14 +588,9 @@
                 logo: document.getElementById('teamLogo').value.trim(),
                 season: state.activeSeason
             };
-
-            const existingIdx = state.teams.findIndex(t => t.id === id);
-            if (existingIdx > -1) {
-                state.teams[existingIdx] = team;
-            } else {
-                state.teams.push(team);
-            }
-
+            const idx = state.teams.findIndex(t => t.id === id);
+            if (idx > -1) state.teams[idx] = team;
+            else state.teams.push(team);
             saveLocalStorage();
             closeTeamModal();
             renderTeams();
@@ -663,7 +604,6 @@
             }
         }
 
-        // Tactical Pitch Studio Logic
         function loadTeamPitch(teamId) {
             if (!teamId) return;
             let setup = state.tactics[teamId] || getDefaultFormation('4-3-3');
@@ -672,23 +612,19 @@
         }
 
         function getDefaultFormation(preset) {
-            // Default node positions in percentage
-            const presets = {
-                '4-3-3': [
-                    { id: 1, pos: 'GK', x: 50, y: 88 },
-                    { id: 2, pos: 'LB', x: 15, y: 68 },
-                    { id: 3, pos: 'CB', x: 38, y: 72 },
-                    { id: 4, pos: 'CB', x: 62, y: 72 },
-                    { id: 5, pos: 'RB', x: 85, y: 68 },
-                    { id: 6, pos: 'CDM', x: 50, y: 52 },
-                    { id: 7, pos: 'CM', x: 32, y: 40 },
-                    { id: 8, pos: 'CM', x: 68, y: 40 },
-                    { id: 9, pos: 'LW', x: 20, y: 18 },
-                    { id: 10, pos: 'ST', x: 50, y: 14 },
-                    { id: 11, pos: 'RW', x: 80, y: 18 }
-                ]
-            };
-            return presets[preset] || presets['4-3-3'];
+            return [
+                { id: 1, pos: 'GK', x: 50, y: 88 },
+                { id: 2, pos: 'LB', x: 15, y: 68 },
+                { id: 3, pos: 'CB', x: 38, y: 72 },
+                { id: 4, pos: 'CB', x: 62, y: 72 },
+                { id: 5, pos: 'RB', x: 85, y: 68 },
+                { id: 6, pos: 'CDM', x: 50, y: 52 },
+                { id: 7, pos: 'CM', x: 32, y: 40 },
+                { id: 8, pos: 'CM', x: 68, y: 40 },
+                { id: 9, pos: 'LW', x: 20, y: 18 },
+                { id: 10, pos: 'ST', x: 50, y: 14 },
+                { id: 11, pos: 'RW', x: 80, y: 18 }
+            ];
         }
 
         function renderTacticalNodes(nodes) {
@@ -761,7 +697,7 @@
             window.addEventListener('touchend', stopDrag);
         }
 
-        // Players CRUD
+        // Players Engine
         function renderPlayers() {
             const grid = document.getElementById('playersGrid');
             const search = document.getElementById('playerSearch').value.toLowerCase();
@@ -775,7 +711,7 @@
             grid.innerHTML = players.map(p => {
                 const team = state.teams.find(t => t.id === p.teamId);
                 return `
-                    <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 flex flex-col justify-between cursor-pointer hover:border-slate-500 transition" onclick="openPlayerProfile('${p.id}')">
+                    <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 flex flex-col justify-between cursor-pointer hover:border-slate-500 transition shadow-md" onclick="openPlayerProfile('${p.id}')">
                         <div class="flex items-center gap-3 mb-3">
                             <img src="${p.photo || 'https://via.placeholder.com/50'}" class="w-12 h-12 rounded-full object-cover border border-emerald-400 bg-slate-900">
                             <div>
@@ -821,12 +757,9 @@
                 photo: document.getElementById('playerPhoto').value.trim()
             };
 
-            const existingIdx = state.players.findIndex(p => p.id === id);
-            if (existingIdx > -1) {
-                state.players[existingIdx] = player;
-            } else {
-                state.players.push(player);
-            }
+            const idx = state.players.findIndex(p => p.id === id);
+            if (idx > -1) state.players[idx] = player;
+            else state.players.push(player);
 
             saveLocalStorage();
             closePlayerModal();
@@ -862,30 +795,29 @@
             document.getElementById('playerProfileModal').classList.add('hidden');
         }
 
-        // JSON Import/Export
+        // Data Backup
         function exportData() {
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state, null, 2));
-            const downloadAnchor = document.createElement('a');
-            downloadAnchor.setAttribute("href", dataStr);
-            downloadAnchor.setAttribute("download", `pitchmaster_backup_${Date.now()}.json`);
-            document.body.appendChild(downloadAnchor);
-            downloadAnchor.click();
-            downloadAnchor.remove();
+            const anchor = document.createElement('a');
+            anchor.setAttribute("href", dataStr);
+            anchor.setAttribute("download", `pitchmaster_backup_${Date.now()}.json`);
+            document.body.appendChild(anchor);
+            anchor.click();
+            anchor.remove();
         }
 
         function importData(e) {
-            const fileReader = new FileReader();
-            fileReader.onload = (event) => {
+            const reader = new FileReader();
+            reader.onload = (event) => {
                 try {
-                    const importedState = JSON.parse(event.target.result);
-                    state = importedState;
+                    state = JSON.parse(event.target.result);
                     saveLocalStorage();
                     location.reload();
                 } catch(err) {
-                    alert("Invalid JSON file.");
+                    alert("Invalid JSON data format.");
                 }
             };
-            fileReader.readAsText(e.target.files[0]);
+            reader.readAsText(e.target.files[0]);
         }
     </script>
 </body>
