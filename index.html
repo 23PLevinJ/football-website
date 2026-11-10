@@ -1,2440 +1,892 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PitchMaster Pro - Football League & Player Management System</title>
-    <!-- Tailwind CSS -->
+    <title>PitchMaster Pro - Football Manager</title>
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        brand: {
-                            50: '#ecfdf5',
-                            100: '#d1fae5',
-                            400: '#34d399',
-                            500: '#10b981',
-                            600: '#059669',
-                            700: '#047857',
-                            900: '#064e3b',
-                            950: '#022c22',
-                            accent: '#06b6d4',
-                            gold: '#fbbf24',
-                        }
-                    },
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                        mono: ['JetBrains Mono', 'monospace'],
-                    }
-                }
-            }
-        }
-    </script>
-    <!-- FontAwesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #090d16;
-            color: #f1f5f9;
-        }
-
-        /* Custom Scrollbar */
-        .custom-scrollbar::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-            background: #0f172a;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #334155;
-            border-radius: 9999px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: #10b981;
-        }
-
-        /* Glassmorphism Styling */
-        .glass-panel {
-            background: rgba(15, 23, 42, 0.75);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-        }
-
-        .glass-card {
-            background: rgba(30, 41, 59, 0.5);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-        }
-        .glass-card:hover {
-            border-color: rgba(16, 185, 129, 0.4);
-            box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.15);
-        }
-
-        /* Tactical Pitch Background Pattern */
         .pitch-bg {
-            background-color: #114b28;
+            background-color: #1a472a;
             background-image: 
-                linear-gradient(rgba(255,255,255,0.06) 2px, transparent 2px),
-                linear-gradient(90deg, rgba(255,255,255,0.06) 2px, transparent 2px),
-                linear-gradient(0deg, #155d32 50%, #0d3d20 50%);
-            background-size: 40px 40px, 40px 40px, 100% 80px;
-            position: relative;
+                radial-gradient(circle, rgba(255,255,255,0.15) 2px, transparent 2px),
+                linear-gradient(to right, rgba(255,255,255,0.1) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255,255,255,0.1) 1px, transparent 1px);
+            background-size: 40px 40px, 20px 20px, 20px 20px;
         }
-
-        /* Dynamic Glow Effects */
-        .glow-emerald {
-            box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
+        .pitch-line {
+            border: 2px solid rgba(255, 255, 255, 0.4);
         }
-        .glow-cyan {
-            box-shadow: 0 0 20px rgba(6, 182, 212, 0.3);
+        .pitch-circle {
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            border-radius: 50%;
+        }
+        .draggable-node {
+            touch-action: none;
+            user-select: none;
         }
     </style>
 </head>
-<body class="min-h-screen flex flex-col justify-between custom-scrollbar selection:bg-brand-500 selection:text-slate-950">
+<body class="bg-slate-900 text-slate-100 min-h-screen font-sans flex flex-col">
 
-    <!-- Top Navigation Header -->
-    <header class="sticky top-0 z-40 glass-panel border-b border-slate-800/80 shadow-2xl">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between h-20">
-                
-                <!-- Brand Logo & App Identity -->
-                <div class="flex items-center space-x-3 cursor-pointer" onclick="switchTab('dashboard')">
-                    <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-brand-600 to-brand-accent p-0.5 shadow-lg shadow-brand-500/20 flex items-center justify-center">
-                        <div class="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center">
-                            <i class="fa-solid fa-futbol text-brand-400 text-xl animate-pulse"></i>
-                        </div>
-                    </div>
-                    <div>
-                        <div class="flex items-center space-x-2">
-                            <span class="text-xl font-black tracking-tight text-white">PitchMaster<span class="text-brand-400">PRO</span></span>
-                            <span class="px-2 py-0.5 text-[10px] font-mono font-bold bg-brand-950 text-brand-400 border border-brand-800/60 rounded-full">v3.5</span>
-                        </div>
-                        <p class="text-[11px] text-slate-400 font-medium">Football League & Player Management Studio</p>
-                    </div>
-                </div>
+    <!-- Header / Navigation -->
+    <header class="bg-slate-800 border-b border-slate-700 sticky top-0 z-30">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <i class="fa-solid fa-shield-halved text-emerald-400 text-2xl"></i>
+                <h1 class="font-bold text-xl tracking-wide bg-gradient-to-r from-emerald-400 to-teal-200 bg-clip-text text-transparent">PitchMaster Pro</h1>
+            </div>
 
-                <!-- Active Season Switcher Bar -->
-                <div class="hidden lg:flex items-center bg-slate-950/80 border border-slate-800 rounded-2xl px-3 py-1.5 space-x-3">
-                    <i class="fa-solid fa-calendar-days text-brand-accent text-xs"></i>
-                    <span class="text-xs font-semibold text-slate-400">Active Season:</span>
-                    <select id="season-selector" onchange="changeSeason(this.value)" class="bg-transparent text-xs font-mono font-bold text-brand-400 border-none focus:outline-none cursor-pointer">
-                        <!-- Populated Dynamically -->
+            <!-- Season Selector & Actions -->
+            <div class="flex items-center gap-3">
+                <div class="flex items-center gap-2 bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-700">
+                    <i class="fa-regular fa-calendar-days text-emerald-400"></i>
+                    <select id="seasonSelect" onchange="switchSeason(this.value)" class="bg-transparent text-sm text-slate-200 focus:outline-none cursor-pointer">
+                        <!-- Populated via JS -->
                     </select>
-                    <button onclick="openSeasonModal()" class="text-slate-400 hover:text-white transition p-1 text-xs" title="Manage / Create Seasons">
-                        <i class="fa-solid fa-gear"></i>
-                    </button>
                 </div>
-
-                <!-- Navigation Controls -->
-                <nav class="flex items-center space-x-1 sm:space-x-2">
-                    <button onclick="switchTab('dashboard')" id="nav-dashboard" class="tab-btn px-3.5 py-2 rounded-xl text-xs font-semibold transition flex items-center space-x-2">
-                        <i class="fa-solid fa-chart-pie"></i><span class="hidden sm:inline">Dashboard</span>
-                    </button>
-                    <button onclick="switchTab('competitions')" id="nav-competitions" class="tab-btn px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800/60 transition flex items-center space-x-2">
-                        <i class="fa-solid fa-trophy"></i><span class="hidden sm:inline">Leagues & Cups</span>
-                    </button>
-                    <button onclick="switchTab('teams')" id="nav-teams" class="tab-btn px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800/60 transition flex items-center space-x-2">
-                        <i class="fa-solid fa-shield-halved"></i><span class="hidden sm:inline">Teams & Pitch</span>
-                    </button>
-                    <button onclick="switchTab('players')" id="nav-players" class="tab-btn px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800/60 transition flex items-center space-x-2">
-                        <i class="fa-solid fa-users"></i><span class="hidden sm:inline">Roster</span>
-                    </button>
-                    <button onclick="switchTab('matches')" id="nav-matches" class="tab-btn px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800/60 transition flex items-center space-x-2">
-                        <i class="fa-solid fa-stopwatch"></i><span class="hidden sm:inline">Match Logs</span>
-                    </button>
-                    <button onclick="switchTab('sync')" id="nav-sync" class="tab-btn px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800/60 transition flex items-center space-x-2">
-                        <i class="fa-solid fa-cloud-arrow-up"></i><span class="hidden sm:inline">Sync</span>
-                    </button>
-                </nav>
-
+                <button onclick="openSeasonManager()" class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-xs font-semibold rounded-lg border border-slate-600 transition">
+                    <i class="fa-solid fa-sliders mr-1 text-emerald-400"></i> Manage Seasons
+                </button>
+                <button onclick="exportData()" class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-xs font-semibold rounded-lg border border-slate-600 transition">
+                    <i class="fa-solid fa-download mr-1 text-blue-400"></i> Export JSON
+                </button>
+                <label class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-xs font-semibold rounded-lg border border-slate-600 transition cursor-pointer">
+                    <i class="fa-solid fa-upload mr-1 text-purple-400"></i> Import JSON
+                    <input type="file" id="importInput" onchange="importData(event)" class="hidden" accept=".json">
+                </label>
             </div>
         </div>
+
+        <!-- Navigation Tabs -->
+        <nav class="max-w-7xl mx-auto px-4 flex gap-1 border-t border-slate-700/50 pt-1">
+            <button onclick="switchTab('competitions')" id="tab-competitions" class="tab-btn px-4 py-2 text-sm font-medium rounded-t-lg transition border-b-2 border-emerald-400 text-emerald-400 bg-slate-800">
+                <i class="fa-solid fa-trophy mr-1.5"></i> Competitions & Leagues
+            </button>
+            <button onclick="switchTab('teams')" id="tab-teams" class="tab-btn px-4 py-2 text-sm font-medium rounded-t-lg transition text-slate-400 hover:text-slate-200">
+                <i class="fa-solid fa-shirt mr-1.5"></i> Teams & Tactics
+            </button>
+            <button onclick="switchTab('players')" id="tab-players" class="tab-btn px-4 py-2 text-sm font-medium rounded-t-lg transition text-slate-400 hover:text-slate-200">
+                <i class="fa-solid fa-user-group mr-1.5"></i> Player Roster
+            </button>
+            <button onclick="switchTab('matches')" id="tab-matches" class="tab-btn px-4 py-2 text-sm font-medium rounded-t-lg transition text-slate-400 hover:text-slate-200">
+                <i class="fa-solid fa-stopwatch mr-1.5"></i> Match Logs
+            </button>
+        </nav>
     </header>
 
-    <!-- Main Dynamic Content Canvas -->
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow w-full">
-        
-        <!-- Mobile Season Switcher -->
-        <div class="lg:hidden flex items-center justify-between bg-slate-900 border border-slate-800 rounded-2xl p-3 mb-6">
-            <div class="flex items-center space-x-2">
-                <i class="fa-solid fa-calendar-days text-brand-400 text-sm"></i>
-                <span class="text-xs font-medium text-slate-300">Season:</span>
-                <select id="season-selector-mobile" onchange="changeSeason(this.value)" class="bg-slate-950 text-xs font-mono font-bold text-brand-400 border border-slate-700 rounded-lg px-2 py-1">
-                    <!-- Dynamic -->
-                </select>
+    <!-- Main Content Container -->
+    <main class="max-w-7xl mx-auto px-4 py-6 flex-grow w-full">
+
+        <!-- SECTION: Competitions -->
+        <section id="sec-competitions" class="tab-content block space-y-6">
+            <div class="flex justify-between items-center">
+                <h2 class="text-xl font-bold text-slate-100"><i class="fa-solid fa-trophy text-amber-400 mr-2"></i> Competitions & Standings</h2>
+                <button onclick="openCompetitionModal()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 font-semibold text-sm rounded-lg shadow transition flex items-center gap-2">
+                    <i class="fa-solid fa-plus"></i> Add Competition
+                </button>
             </div>
-            <button onclick="openSeasonModal()" class="px-3 py-1 bg-slate-800 text-white rounded-lg text-xs font-bold flex items-center gap-1.5">
-                <i class="fa-solid fa-gear"></i> Manage
-            </button>
-        </div>
-
-        <!-- ================= TAB 1: DASHBOARD ================= -->
-        <section id="tab-dashboard" class="tab-content space-y-8">
-            <!-- Hero Stat Cards Banner -->
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div class="glass-card p-5 rounded-2xl border border-slate-800 flex items-center justify-between">
-                    <div>
-                        <p class="text-[10px] font-mono font-bold uppercase text-slate-400 tracking-wider">Active Competitions</p>
-                        <h3 id="stat-competitions-count" class="text-2xl font-black text-white mt-1">0</h3>
-                    </div>
-                    <div class="w-10 h-10 rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center text-lg"><i class="fa-solid fa-trophy"></i></div>
-                </div>
-                <div class="glass-card p-5 rounded-2xl border border-slate-800 flex items-center justify-between">
-                    <div>
-                        <p class="text-[10px] font-mono font-bold uppercase text-slate-400 tracking-wider">Registered Teams</p>
-                        <h3 id="stat-teams-count" class="text-2xl font-black text-white mt-1">0</h3>
-                    </div>
-                    <div class="w-10 h-10 rounded-xl bg-brand-500/10 text-brand-400 flex items-center justify-center text-lg"><i class="fa-solid fa-shield-halved"></i></div>
-                </div>
-                <div class="glass-card p-5 rounded-2xl border border-slate-800 flex items-center justify-between">
-                    <div>
-                        <p class="text-[10px] font-mono font-bold uppercase text-slate-400 tracking-wider">Total Players</p>
-                        <h3 id="stat-players-count" class="text-2xl font-black text-white mt-1">0</h3>
-                    </div>
-                    <div class="w-10 h-10 rounded-xl bg-brand-accent/10 text-brand-accent flex items-center justify-center text-lg"><i class="fa-solid fa-users"></i></div>
-                </div>
-                <div class="glass-card p-5 rounded-2xl border border-slate-800 flex items-center justify-between">
-                    <div>
-                        <p class="text-[10px] font-mono font-bold uppercase text-slate-400 tracking-wider">Matches Logged</p>
-                        <h3 id="stat-matches-count" class="text-2xl font-black text-white mt-1">0</h3>
-                    </div>
-                    <div class="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center text-lg"><i class="fa-solid fa-futbol"></i></div>
-                </div>
-            </div>
-
-            <!-- Dashboard Split View -->
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <!-- Main Featured League Standings -->
-                <div class="lg:col-span-2 glass-panel p-6 rounded-3xl space-y-5">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <h2 class="text-lg font-bold text-white flex items-center gap-2">
-                                <i class="fa-solid fa-ranking-star text-brand-gold"></i> Live League Table
-                            </h2>
-                            <p class="text-xs text-slate-400">Current standings based on configured point systems</p>
-                        </div>
-                        <select id="dashboard-league-select" onchange="renderDashboardStandings()" class="bg-slate-900 border border-slate-700 text-xs text-brand-400 font-mono font-bold rounded-xl px-3 py-1.5 focus:outline-none">
-                            <!-- Populated -->
-                        </select>
-                    </div>
-
-                    <div class="overflow-x-auto custom-scrollbar">
-                        <table class="w-full text-left text-xs text-slate-300">
-                            <thead class="bg-slate-950/80 text-[10px] uppercase font-mono text-slate-400 border-b border-slate-800">
-                                <tr>
-                                    <th class="py-3 px-3">#</th>
-                                    <th class="py-3 px-3">Club</th>
-                                    <th class="py-3 px-3 text-center">MP</th>
-                                    <th class="py-3 px-3 text-center">W</th>
-                                    <th class="py-3 px-3 text-center">D</th>
-                                    <th class="py-3 px-3 text-center">L</th>
-                                    <th class="py-3 px-3 text-center">GF</th>
-                                    <th class="py-3 px-3 text-center">GA</th>
-                                    <th class="py-3 px-3 text-center">GD</th>
-                                    <th class="py-3 px-3 text-center text-brand-400 font-bold">PTS</th>
-                                </tr>
-                            </thead>
-                            <tbody id="dashboard-standings-body" class="divide-y divide-slate-800/60 font-mono">
-                                <!-- Dynamic Rows -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- Season Leaderboards Leader Widgets -->
-                <div class="space-y-6">
-                    <!-- Top Scorer Widget -->
-                    <div class="glass-panel p-5 rounded-3xl border border-slate-800 space-y-4">
-                        <div class="flex items-center justify-between">
-                            <h3 class="text-xs font-bold text-slate-300 uppercase font-mono tracking-wider flex items-center gap-2">
-                                <i class="fa-solid fa-crown text-brand-gold"></i> Golden Boot Leaders
-                            </h3>
-                            <span class="text-[10px] text-brand-400 font-mono">Goals</span>
-                        </div>
-                        <div id="dash-top-scorers" class="space-y-3">
-                            <!-- Dynamic Scorer Rows -->
-                        </div>
-                    </div>
-
-                    <!-- Top Assist Widget -->
-                    <div class="glass-panel p-5 rounded-3xl border border-slate-800 space-y-4">
-                        <div class="flex items-center justify-between">
-                            <h3 class="text-xs font-bold text-slate-300 uppercase font-mono tracking-wider flex items-center gap-2">
-                                <i class="fa-solid fa-wand-magic-sparkles text-brand-accent"></i> Assist Kings
-                            </h3>
-                            <span class="text-[10px] text-brand-accent font-mono">Assists</span>
-                        </div>
-                        <div id="dash-top-assists" class="space-y-3">
-                            <!-- Dynamic Assist Rows -->
-                        </div>
-                    </div>
-                </div>
+            <div id="competitionsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Rendered dynamically -->
             </div>
         </section>
 
-        <!-- ================= TAB 2: COMPETITIONS & BRACKETS ================= -->
-        <section id="tab-competitions" class="tab-content hidden space-y-8">
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 glass-panel p-6 rounded-3xl">
-                <div>
-                    <h2 class="text-xl font-bold text-white">Leagues & Tournament Cups</h2>
-                    <p class="text-xs text-slate-400 mt-1">Configure point engines, knockouts, goal tiebreakers, or delete competitions.</p>
-                </div>
-                <button onclick="openCompetitionModal()" class="bg-brand-600 hover:bg-brand-500 text-white px-4 py-2.5 rounded-xl font-bold text-xs transition flex items-center gap-2 shadow-lg shadow-brand-600/20">
-                    <i class="fa-solid fa-plus"></i> Create Competition
+        <!-- SECTION: Teams & Tactics -->
+        <section id="sec-teams" class="tab-content hidden space-y-6">
+            <div class="flex justify-between items-center">
+                <h2 class="text-xl font-bold text-slate-100"><i class="fa-solid fa-shirt text-emerald-400 mr-2"></i> Teams & Tactical Studio</h2>
+                <button onclick="openTeamModal()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 font-semibold text-sm rounded-lg shadow transition flex items-center gap-2">
+                    <i class="fa-solid fa-plus"></i> Add Team
                 </button>
             </div>
 
-            <!-- Competitions Grid -->
-            <div id="competitions-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <!-- Dynamically populated -->
-            </div>
-
-            <!-- Competition Details Viewer & Knockout Bracket Canvas -->
-            <div id="competition-detail-view" class="hidden glass-panel p-6 rounded-3xl space-y-6">
-                <div class="flex items-center justify-between border-b border-slate-800 pb-4">
-                    <div class="flex items-center space-x-3">
-                        <button onclick="closeCompDetail()" class="p-2 bg-slate-900 text-slate-400 hover:text-white rounded-xl text-xs"><i class="fa-solid fa-arrow-left"></i></button>
-                        <h3 id="comp-detail-title" class="text-lg font-bold text-white">Competition Dashboard</h3>
-                    </div>
-                    <span id="comp-detail-badge" class="px-3 py-1 rounded-full text-xs font-mono font-bold bg-indigo-950 text-indigo-400 border border-indigo-800">League</span>
-                </div>
-
-                <!-- Table or Bracket Dynamic Render -->
-                <div id="comp-detail-render" class="overflow-x-auto custom-scrollbar">
-                    <!-- Dynamic -->
-                </div>
-            </div>
-        </section>
-
-        <!-- ================= TAB 3: TEAMS & PITCH STUDIO ================= -->
-        <section id="tab-teams" class="tab-content hidden space-y-8">
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 glass-panel p-6 rounded-3xl">
-                <div>
-                    <h2 class="text-xl font-bold text-white">Teams & Tactical Pitch Studio</h2>
-                    <p class="text-xs text-slate-400 mt-1">Manage team profiles, home grounds, multiple league entries, and setup 11-v-11 starting tactics.</p>
-                </div>
-                <button onclick="openTeamModal()" class="bg-brand-600 hover:bg-brand-500 text-white px-4 py-2.5 rounded-xl font-bold text-xs transition flex items-center gap-2 shadow-lg shadow-brand-600/20">
-                    <i class="fa-solid fa-plus"></i> Add New Team
-                </button>
-            </div>
-
-            <!-- Teams Grid -->
-            <div id="teams-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <!-- Dynamic Teams Cards -->
-            </div>
-        </section>
-
-        <!-- ================= TAB 4: PLAYERS & ROSTERS ================= -->
-        <section id="tab-players" class="tab-content hidden space-y-6">
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 glass-panel p-6 rounded-3xl">
-                <div>
-                    <h2 class="text-xl font-bold text-white">Player Roster & Transfer Engine</h2>
-                    <p class="text-xs text-slate-400 mt-1">View career profiles, per-game player stats, position breakdown, or execute player transfers.</p>
-                </div>
-                <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-                    <input type="text" id="player-search" oninput="renderPlayers()" placeholder="Search player or position..." class="bg-slate-950 border border-slate-700 text-xs rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:border-brand-500 w-full sm:w-44">
-                    <select id="player-team-filter" onchange="renderPlayers()" class="bg-slate-950 border border-slate-700 text-xs rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:border-brand-500">
-                        <option value="ALL">All Teams</option>
-                    </select>
-                    <button onclick="openPlayerModal()" class="bg-brand-600 hover:bg-brand-500 text-white px-3.5 py-2 rounded-xl font-bold text-xs transition flex items-center gap-1.5 shadow-lg shadow-brand-600/20">
-                        <i class="fa-solid fa-user-plus"></i> Add Player
-                    </button>
-                    <button onclick="openTransferModal()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-brand-accent px-3.5 py-2 rounded-xl font-bold text-xs transition flex items-center gap-1.5">
-                        <i class="fa-solid fa-right-left"></i> Transfer
-                    </button>
-                </div>
-            </div>
-
-            <!-- Player Cards Grid -->
-            <div id="players-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                <!-- Dynamically Populated -->
-            </div>
-        </section>
-
-        <!-- ================= TAB 5: MATCH LOGS & STATS ================= -->
-        <section id="tab-matches" class="tab-content hidden space-y-8">
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 glass-panel p-6 rounded-3xl">
-                <div>
-                    <h2 class="text-xl font-bold text-white">Match Center & Detailed Stats Logger</h2>
-                    <p class="text-xs text-slate-400 mt-1">Record game scores and log minute-by-minute stats per player (goals, assists, cards, match ratings).</p>
-                </div>
-                <button onclick="openMatchModal()" class="bg-brand-600 hover:bg-brand-500 text-white px-4 py-2.5 rounded-xl font-bold text-xs transition flex items-center gap-2 shadow-lg shadow-brand-600/20">
-                    <i class="fa-solid fa-stopwatch"></i> Record Match & Player Stats
-                </button>
-            </div>
-
-            <!-- Match Logs List -->
-            <div id="matches-list" class="space-y-4">
-                <!-- Dynamic Match Cards -->
-            </div>
-        </section>
-
-        <!-- ================= TAB 6: CLOUD & SYNC ================= -->
-        <section id="tab-sync" class="tab-content hidden space-y-8">
-            <div class="glass-panel p-8 rounded-3xl space-y-6 max-w-3xl mx-auto">
-                <div class="flex items-center space-x-3 border-b border-slate-800 pb-4">
-                    <div class="w-12 h-12 rounded-2xl bg-brand-accent/10 text-brand-accent flex items-center justify-center text-xl">
-                        <i class="fa-solid fa-cloud-arrow-up"></i>
-                    </div>
-                    <div>
-                        <h2 class="text-xl font-bold text-white">Multi-Device Cloud & Data Sync Engine</h2>
-                        <p class="text-xs text-slate-400">Export your local database to host across GitHub Pages or transfer between devices.</p>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div class="bg-slate-950 p-5 rounded-2xl border border-slate-800 space-y-3">
-                        <h3 class="text-sm font-bold text-white flex items-center gap-2"><i class="fa-solid fa-file-export text-brand-400"></i> Backup Database (JSON)</h3>
-                        <p class="text-xs text-slate-400">Download a full JSON snapshot of all seasons, competitions, teams, players, and match records.</p>
-                        <button onclick="exportDatabaseJSON()" class="w-full py-2.5 bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs rounded-xl transition">
-                            <i class="fa-solid fa-download mr-1"></i> Export JSON Backup
-                        </button>
-                    </div>
-
-                    <div class="bg-slate-950 p-5 rounded-2xl border border-slate-800 space-y-3">
-                        <h3 class="text-sm font-bold text-white flex items-center gap-2"><i class="fa-solid fa-file-import text-brand-accent"></i> Restore Database (JSON)</h3>
-                        <p class="text-xs text-slate-400">Upload a JSON backup file to sync database state across browsers or devices.</p>
-                        <input type="file" id="import-file-input" onchange="importDatabaseJSON(event)" accept=".json" class="hidden">
-                        <button onclick="document.getElementById('import-file-input').click()" class="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-brand-accent font-bold text-xs border border-slate-700 rounded-xl transition">
-                            <i class="fa-solid fa-upload mr-1"></i> Import JSON File
-                        </button>
-                    </div>
-                </div>
-
-                <div class="bg-slate-950/60 p-5 rounded-2xl border border-slate-800/80 space-y-3">
-                    <h3 class="text-xs font-bold uppercase font-mono text-slate-400 tracking-wider">Reset Engine</h3>
-                    <p class="text-xs text-slate-500">Restore factory demonstration data (deletes current custom data).</p>
-                    <button onclick="resetToDemoData()" class="px-4 py-2 bg-rose-950/50 hover:bg-rose-900/60 text-rose-300 font-bold text-xs border border-rose-800/60 rounded-xl transition">
-                        <i class="fa-solid fa-rotate-left mr-1"></i> Reset to Default Demo State
-                    </button>
-                </div>
-            </div>
-        </section>
-
-    </main>
-
-    <!-- Footer -->
-    <footer class="glass-panel border-t border-slate-800/80 py-6 text-center text-xs text-slate-500 font-mono">
-        <p>PitchMaster Pro Football Management System • Single-File Engine with Dynamic Persistence</p>
-    </footer>
-
-    <!-- ================= MODALS ================= -->
-
-    <!-- Season Modal -->
-    <div id="modal-season" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="glass-panel rounded-3xl max-w-md w-full p-6 space-y-5 border border-slate-800 shadow-2xl relative">
-            <button onclick="closeModal('modal-season')" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
-            <h3 class="text-lg font-bold text-white flex items-center gap-2"><i class="fa-solid fa-calendar-plus text-brand-400"></i> Season Setup</h3>
-            <form id="form-season" onsubmit="saveSeason(event)" class="space-y-4">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-300 mb-1">Season Name (e.g. 2024/25)</label>
-                    <input type="text" id="season-name-input" required placeholder="2025/26" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-500">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-300 mb-1">Clone Data from Previous Season?</label>
-                    <select id="season-clone-select" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-300">
-                        <option value="NONE">Start Fresh (Empty Competitions/Rosters)</option>
-                        <!-- Dynamic Season Options -->
+            <!-- Team Selector for Tactics Pitch -->
+            <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 flex flex-wrap items-center justify-between gap-4">
+                <div class="flex items-center gap-3">
+                    <label class="text-sm font-semibold text-slate-300">Select Active Team Pitch:</label>
+                    <select id="tacticsTeamSelect" onchange="loadTeamPitch(this.value)" class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-slate-200 focus:outline-none">
+                        <!-- Populated dynamically -->
                     </select>
                 </div>
-                <div class="flex justify-end space-x-2 pt-2">
-                    <button type="button" onclick="closeModal('modal-season')" class="px-4 py-2 bg-slate-800 text-slate-300 text-xs font-bold rounded-xl">Cancel</button>
-                    <button type="submit" class="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white text-xs font-bold rounded-xl">Create Season</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Competition Modal -->
-    <div id="modal-competition" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="glass-panel rounded-3xl max-w-lg w-full p-6 space-y-5 border border-slate-800 shadow-2xl relative">
-            <button onclick="closeModal('modal-competition')" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
-            <h3 id="modal-comp-title" class="text-lg font-bold text-white flex items-center gap-2"><i class="fa-solid fa-trophy text-brand-gold"></i> Competition Settings</h3>
-            <form id="form-competition" onsubmit="saveCompetition(event)" class="space-y-4">
-                <input type="hidden" id="comp-id-input">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-300 mb-1">Competition Name</label>
-                    <input type="text" id="comp-name" required placeholder="Premier League, Champions Cup..." class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-500">
-                </div>
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-300 mb-1">Type</label>
-                        <select id="comp-type" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
-                            <option value="LEAGUE">League (Points Table)</option>
-                            <option value="CUP">Knockout Cup (Bracket)</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-300 mb-1">Tier Level</label>
-                        <input type="text" id="comp-tier" placeholder="Tier 1 / Division A" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
-                    </div>
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-300 mb-1">Crest/Logo Image URL</label>
-                    <input type="url" id="comp-logo" placeholder="https://..." class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
-                </div>
-                <div class="grid grid-cols-3 gap-3 bg-slate-950 p-3 rounded-xl border border-slate-800">
-                    <div>
-                        <label class="block text-[10px] font-mono text-slate-400">Win Pts</label>
-                        <input type="number" id="comp-pts-win" value="3" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-xs text-center text-white">
-                    </div>
-                    <div>
-                        <label class="block text-[10px] font-mono text-slate-400">Draw Pts</label>
-                        <input type="number" id="comp-pts-draw" value="1" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-xs text-center text-white">
-                    </div>
-                    <div>
-                        <label class="block text-[10px] font-mono text-slate-400">Loss Pts</label>
-                        <input type="number" id="comp-pts-loss" value="0" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-xs text-center text-white">
-                    </div>
-                </div>
-                <div class="flex justify-end space-x-2 pt-2">
-                    <button type="button" onclick="closeModal('modal-competition')" class="px-4 py-2 bg-slate-800 text-slate-300 text-xs font-bold rounded-xl">Cancel</button>
-                    <button type="submit" class="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white text-xs font-bold rounded-xl">Save Competition</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Team Modal -->
-    <div id="modal-team" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="glass-panel rounded-3xl max-w-lg w-full p-6 space-y-5 border border-slate-800 shadow-2xl relative max-h-[90vh] overflow-y-auto custom-scrollbar">
-            <button onclick="closeModal('modal-team')" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
-            <h3 id="modal-team-title" class="text-lg font-bold text-white flex items-center gap-2"><i class="fa-solid fa-shield-halved text-brand-400"></i> Team Profile</h3>
-            <form id="form-team" onsubmit="saveTeam(event)" class="space-y-4">
-                <input type="hidden" id="team-id-input">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-300 mb-1">Team Name</label>
-                    <input type="text" id="team-name" required placeholder="Arsenal FC, Real Madrid..." class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-500">
-                </div>
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-300 mb-1">Stadium / Venue Name</label>
-                        <input type="text" id="team-stadium" placeholder="Emirates Stadium..." class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-300 mb-1">Default Formation</label>
-                        <select id="team-formation" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
-                        <option value="4-3-3">4-3-3 Attacking</option>
-                        <option value="4-2-3-1">4-2-3-1 Wide</option>
-                        <option value="4-4-2">4-4-2 Classic</option>
-                        <option value="3-5-2">3-5-2 Wingbacks</option>
-                        <option value="5-3-2">5-3-2 Defensive</option>
-                        <option value="3-4-3">3-4-3 Wide</option>
-                        <option value="CUSTOM">Custom Setup</option>
-                    </select>
-                    </div>
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-300 mb-1">Team Crest Logo URL</label>
-                    <input type="url" id="team-crest" placeholder="https://..." class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-300 mb-2">Participating Competitions in Season</label>
-                    <div id="team-comp-checkboxes" class="space-y-2 max-h-36 overflow-y-auto custom-scrollbar bg-slate-950 p-3 rounded-xl border border-slate-800">
-                        <!-- Dynamic Checkboxes -->
-                    </div>
-                </div>
-                <div class="flex justify-end space-x-2 pt-2">
-                    <button type="button" onclick="closeModal('modal-team')" class="px-4 py-2 bg-slate-800 text-slate-300 text-xs font-bold rounded-xl">Cancel</button>
-                    <button type="submit" class="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white text-xs font-bold rounded-xl">Save Team</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Tactical Pitch Modal -->
-    <div id="modal-tactics" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
-        <div class="glass-panel rounded-3xl max-w-4xl w-full p-6 space-y-5 border border-slate-800 shadow-2xl relative max-h-[92vh] overflow-y-auto custom-scrollbar">
-            <button onclick="closeModal('modal-tactics')" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
-            
-            <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-2 border-b border-slate-800 pb-4">
-                <div>
-                    <h3 id="tactics-team-title" class="text-xl font-bold text-white">Tactical Pitch Studio</h3>
-                    <p class="text-xs text-slate-400">Drag nodes to position players. Click position labels to rename them dynamically.</p>
-                </div>
-                <div class="flex flex-wrap items-center gap-2">
-                    <select id="tactics-formation-select" onchange="changeTacticsFormation(this.value)" class="bg-slate-950 border border-slate-700 text-xs font-mono font-bold text-brand-400 rounded-xl px-3 py-1.5">
+                <div class="flex items-center gap-3">
+                    <label class="text-sm font-semibold text-slate-300">Formation Preset:</label>
+                    <select id="formationPreset" onchange="applyFormationPreset(this.value)" class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-slate-200 focus:outline-none">
                         <option value="4-3-3">4-3-3</option>
                         <option value="4-2-3-1">4-2-3-1</option>
                         <option value="4-4-2">4-4-2</option>
                         <option value="3-5-2">3-5-2</option>
                         <option value="5-3-2">5-3-2</option>
-                        <option value="3-4-3">3-4-3</option>
-                        <option value="CUSTOM">Custom Setup</option>
                     </select>
-                    <button onclick="resetPitchLayout()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs rounded-xl transition">
-                        <i class="fa-solid fa-rotate-left"></i> Reset Pins
-                    </button>
-                    <button onclick="saveCustomFormation()" class="px-3 py-1.5 bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs rounded-xl transition flex items-center gap-1.5">
-                        <i class="fa-solid fa-floppy-disk"></i> Save Layout
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Tactical Pitch Studio -->
+                <div class="lg:col-span-2 bg-slate-800 p-4 rounded-xl border border-slate-700">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="text-base font-bold text-emerald-400 flex items-center gap-2">
+                            <i class="fa-solid fa-compass-drafting"></i> Dynamic Tactical Pitch Studio
+                        </h3>
+                        <span class="text-xs text-slate-400">Drag nodes anywhere on the field</span>
+                    </div>
+
+                    <!-- Pitch Canvas Area -->
+                    <div id="tacticalPitch" class="pitch-bg relative w-full h-[520px] rounded-lg border-2 border-slate-600 overflow-hidden select-none">
+                        <!-- Markings -->
+                        <div class="absolute inset-x-0 top-1/2 -translate-y-1/2 pitch-line"></div>
+                        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-28 h-28 pitch-circle"></div>
+                        <div class="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-24 border-b-2 border-x-2 border-white/40"></div>
+                        <div class="absolute bottom-0 left-1/2 -translate-x-1/2 w-48 h-24 border-t-2 border-x-2 border-white/40"></div>
+                        
+                        <!-- Draggable Nodes Container -->
+                        <div id="pitchNodesContainer" class="absolute inset-0">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Squad List & Position Customizer -->
+                <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 flex flex-col justify-between">
+                    <div>
+                        <h3 class="text-base font-bold text-slate-200 mb-3"><i class="fa-solid fa-list-check text-emerald-400 mr-2"></i> Pitch Slot & Position Customizer</h3>
+                        <div id="positionCustomizerList" class="space-y-2 max-h-[420px] overflow-y-auto pr-1">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+                    <button onclick="saveCustomTactics()" class="w-full mt-4 py-2 bg-emerald-600 hover:bg-emerald-500 font-bold text-sm rounded-lg transition">
+                        <i class="fa-solid fa-floppy-disk mr-1"></i> Save Tactical Setup
                     </button>
                 </div>
             </div>
 
-    <!-- Season Manager Modal -->
-    <div id="modal-season" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="glass-panel rounded-3xl max-w-lg w-full p-6 space-y-5 border border-slate-800 shadow-2xl relative max-h-[90vh] overflow-y-auto custom-scrollbar">
-            <button onclick="closeModal('modal-season')" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
-            <h3 class="text-lg font-bold text-white flex items-center gap-2"><i class="fa-solid fa-calendar-days text-brand-400"></i> Season Manager</h3>
+            <!-- Teams List Grid -->
+            <div class="mt-8">
+                <h3 class="text-lg font-bold text-slate-200 mb-4"><i class="fa-solid fa-shield-halved text-emerald-400 mr-2"></i> Team Directory</h3>
+                <div id="teamsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <!-- Populated dynamically -->
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION: Player Roster -->
+        <section id="sec-players" class="tab-content hidden space-y-6">
+            <div class="flex justify-between items-center">
+                <h2 class="text-xl font-bold text-slate-100"><i class="fa-solid fa-user-group text-blue-400 mr-2"></i> Player Roster</h2>
+                <button onclick="openPlayerModal()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 font-semibold text-sm rounded-lg shadow transition flex items-center gap-2">
+                    <i class="fa-solid fa-user-plus"></i> Add Player
+                </button>
+            </div>
+
+            <!-- Filters -->
+            <div class="flex flex-wrap gap-4 bg-slate-800 p-4 rounded-xl border border-slate-700">
+                <input type="text" id="playerSearch" oninput="renderPlayers()" placeholder="Search player name..." class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-slate-200 focus:outline-none flex-grow">
+                <select id="playerTeamFilter" onchange="renderPlayers()" class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-slate-200 focus:outline-none">
+                    <option value="ALL">All Teams</option>
+                </select>
+            </div>
+
+            <!-- Players Cards Grid -->
+            <div id="playersGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <!-- Populated dynamically -->
+            </div>
+        </section>
+
+        <!-- SECTION: Match Logs -->
+        <section id="sec-matches" class="tab-content hidden space-y-6">
+            <div class="flex justify-between items-center">
+                <h2 class="text-xl font-bold text-slate-100"><i class="fa-solid fa-stopwatch text-purple-400 mr-2"></i> Match Logs & Stats</h2>
+                <button onclick="openMatchModal()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 font-semibold text-sm rounded-lg shadow transition flex items-center gap-2">
+                    <i class="fa-solid fa-plus"></i> Record Match
+                </button>
+            </div>
+
+            <div id="matchesList" class="space-y-4">
+                <!-- Populated dynamically -->
+            </div>
+        </section>
+
+    </main>
+
+    <!-- MODAL: Manage Seasons -->
+    <div id="seasonModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-slate-800 rounded-2xl border border-slate-700 w-full max-w-lg p-6 space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+                <h3 class="text-lg font-bold text-slate-100"><i class="fa-solid fa-sliders text-emerald-400 mr-2"></i> Manage Seasons</h3>
+                <button onclick="closeSeasonModal()" class="text-slate-400 hover:text-slate-200"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
             
-            <!-- Create New Season Box -->
-            <form id="form-season" onsubmit="saveSeason(event)" class="space-y-4 bg-slate-950 p-4 rounded-2xl border border-slate-800">
-                <h4 class="text-xs font-bold font-mono text-brand-400 uppercase tracking-wider">Create New Season</h4>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-300 mb-1">Season Name (e.g. 2025/26)</label>
-                    <input type="text" id="season-name-input" required placeholder="2025/26" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-500">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-300 mb-1">Clone Data from Existing Season?</label>
-                    <select id="season-clone-select" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-300">
-                        <option value="NONE">Start Fresh (Empty Competitions/Rosters)</option>
-                        <!-- Dynamic Season Options -->
-                    </select>
-                </div>
-                <div class="flex justify-end pt-1">
-                    <button type="submit" class="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white text-xs font-bold rounded-xl shadow-lg transition">
-                        <i class="fa-solid fa-plus mr-1"></i> Add Season
-                    </button>
-                </div>
-            </form>
-
-            <!-- Reorder & Manage Existing Seasons -->
-            <div class="space-y-3">
-                <h4 class="text-xs font-bold font-mono text-slate-300 uppercase tracking-wider">Manage & Reorder Existing Seasons</h4>
-                <div id="seasons-management-list" class="space-y-2">
-                    <!-- Dynamically Populated List of Seasons -->
-                </div>
+            <div id="seasonsListContainer" class="space-y-3 max-h-60 overflow-y-auto pr-1">
+                <!-- Populated dynamically -->
             </div>
 
-            <div class="flex justify-end pt-2 border-t border-slate-800">
-                <button type="button" onclick="closeModal('modal-season')" class="px-4 py-2 bg-slate-800 text-slate-300 text-xs font-bold rounded-xl">Close</button>
+            <div class="flex gap-2 pt-2 border-t border-slate-700">
+                <input type="text" id="newSeasonName" placeholder="New Season (e.g. 2026/27)" class="flex-grow bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200">
+                <button onclick="addSeason()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 font-bold text-sm rounded-lg transition">Add</button>
             </div>
         </div>
     </div>
 
-    <!-- Player Edit/Add Modal -->
-    <div id="modal-player" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="glass-panel rounded-3xl max-w-lg w-full p-6 space-y-5 border border-slate-800 shadow-2xl relative max-h-[90vh] overflow-y-auto custom-scrollbar">
-            <button onclick="closeModal('modal-player')" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
-            <h3 id="modal-player-title" class="text-lg font-bold text-white flex items-center gap-2"><i class="fa-solid fa-user-plus text-brand-400"></i> Player Profile Setup</h3>
-            <form id="form-player" onsubmit="savePlayer(event)" class="space-y-4">
-                <input type="hidden" id="player-id-input">
+    <!-- MODAL: Competition Form -->
+    <div id="compModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-slate-800 rounded-2xl border border-slate-700 w-full max-w-md p-6 space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+                <h3 class="text-lg font-bold text-slate-100" id="compModalTitle">Add Competition</h3>
+                <button onclick="closeCompModal()" class="text-slate-400 hover:text-slate-200"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <form id="compForm" onsubmit="saveCompetition(event)" class="space-y-4">
+                <input type="hidden" id="compEditId">
                 <div>
-                    <label class="block text-xs font-semibold text-slate-300 mb-1">Player Full Name</label>
-                    <input type="text" id="player-name" required placeholder="Bukayo Saka, Jude Bellingham..." class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-500">
+                    <label class="block text-xs font-semibold text-slate-400 mb-1">Competition Name</label>
+                    <input type="text" id="compName" required placeholder="Premier League" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200">
                 </div>
                 <div class="grid grid-cols-3 gap-3">
                     <div>
-                        <label class="block text-xs font-semibold text-slate-300 mb-1">Squad Number</label>
-                        <input type="number" id="player-number" value="7" min="1" max="99" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">Win Pts</label>
+                        <input type="number" id="compWinPts" value="3" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200">
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold text-slate-300 mb-1">Primary Pos</label>
-                        <select id="player-pos-1" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
-                            <option value="GK">GK - Goalkeeper</option>
-                            <option value="CB">CB - Center Back</option>
-                            <option value="LB">LB - Left Back</option>
-                            <option value="RB">RB - Right Back</option>
-                            <option value="LWB">LWB - Left Wing Back</option>
-                            <option value="RWB">RWB - Right Wing Back</option>
-                            <option value="CDM">CDM - Def Midfielder</option>
-                            <option value="CM">CM - Central Midfielder</option>
-                            <option value="CAM">CAM - Att Midfielder</option>
-                            <option value="LM">LM - Left Midfielder</option>
-                            <option value="RM">RM - Right Midfielder</option>
-                            <option value="LW">LW - Left Winger</option>
-                            <option value="RW">RW - Right Winger</option>
-                            <option value="CF">CF - Center Forward</option>
-                            <option value="ST" selected>ST - Striker</option>
-                        </select>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">Draw Pts</label>
+                        <input type="number" id="compDrawPts" value="1" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200">
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold text-slate-300 mb-1">Secondary Pos</label>
-                        <select id="player-pos-2" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
-                            <option value="NONE">None</option>
-                            <option value="RW">RW</option>
-                            <option value="LW">LW</option>
-                            <option value="CAM">CAM</option>
-                            <option value="CM">CM</option>
-                            <option value="CF">CF</option>
-                        </select>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">Loss Pts</label>
+                        <input type="number" id="compLossPts" value="0" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200">
                     </div>
+                </div>
+                <div class="flex justify-end gap-3 pt-4">
+                    <button type="button" onclick="closeCompModal()" class="px-4 py-2 bg-slate-700 text-slate-300 font-semibold text-sm rounded-lg">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm rounded-lg">Save Competition</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: Team Form -->
+    <div id="teamModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-slate-800 rounded-2xl border border-slate-700 w-full max-w-md p-6 space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+                <h3 class="text-lg font-bold text-slate-100" id="teamModalTitle">Add Team</h3>
+                <button onclick="closeTeamModal()" class="text-slate-400 hover:text-slate-200"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <form id="teamForm" onsubmit="saveTeam(event)" class="space-y-4">
+                <input type="hidden" id="teamEditId">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 mb-1">Team Name</label>
+                    <input type="text" id="teamName" required placeholder="Arsenal FC" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 mb-1">Competition / League</label>
+                    <select id="teamCompId" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200">
+                        <!-- Populated dynamically -->
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 mb-1">Logo / Badge URL</label>
+                    <input type="url" id="teamLogo" placeholder="https://..." class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200">
+                </div>
+                <div class="flex justify-end gap-3 pt-4">
+                    <button type="button" onclick="closeTeamModal()" class="px-4 py-2 bg-slate-700 text-slate-300 font-semibold text-sm rounded-lg">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm rounded-lg">Save Team</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: Player Form -->
+    <div id="playerModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-slate-800 rounded-2xl border border-slate-700 w-full max-w-md p-6 space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+                <h3 class="text-lg font-bold text-slate-100" id="playerModalTitle">Add Player</h3>
+                <button onclick="closePlayerModal()" class="text-slate-400 hover:text-slate-200"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <form id="playerForm" onsubmit="savePlayer(event)" class="space-y-4">
+                <input type="hidden" id="playerEditId">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 mb-1">Full Name</label>
+                    <input type="text" id="playerName" required placeholder="Bukayo Saka" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200">
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-xs font-semibold text-slate-300 mb-1">Assigned Team</label>
-                        <select id="player-team-select" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
-                            <!-- Dynamic Teams -->
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">Team</label>
+                        <select id="playerTeamId" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200">
+                            <!-- Populated dynamically -->
                         </select>
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold text-slate-300 mb-1">Photo Image URL</label>
-                        <input type="url" id="player-photo" placeholder="https://..." class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">Number</label>
+                        <input type="number" id="playerNumber" value="7" min="1" max="99" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200">
                     </div>
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-slate-300 mb-1">Player Bio / Notes</label>
-                    <textarea id="player-bio" rows="2" placeholder="Key tactical qualities, nationality, footedness..." class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-500"></textarea>
+                    <label class="block text-xs font-semibold text-slate-400 mb-1">Position</label>
+                    <input type="text" id="playerPosition" required placeholder="RW / Winger" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200">
                 </div>
-                <div class="flex justify-end space-x-2 pt-2">
-                    <button type="button" onclick="closeModal('modal-player')" class="px-4 py-2 bg-slate-800 text-slate-300 text-xs font-bold rounded-xl">Cancel</button>
-                    <button type="submit" class="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white text-xs font-bold rounded-xl">Save Player</button>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 mb-1">Photo URL</label>
+                    <input type="url" id="playerPhoto" placeholder="https://..." class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200">
+                </div>
+                <div class="flex justify-end gap-3 pt-4">
+                    <button type="button" onclick="closePlayerModal()" class="px-4 py-2 bg-slate-700 text-slate-300 font-semibold text-sm rounded-lg">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm rounded-lg">Save Player</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Player Transfer Modal -->
-    <div id="modal-transfer" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="glass-panel rounded-3xl max-w-md w-full p-6 space-y-5 border border-slate-800 shadow-2xl relative">
-            <button onclick="closeModal('modal-transfer')" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
-            <h3 class="text-lg font-bold text-white flex items-center gap-2"><i class="fa-solid fa-right-left text-brand-accent"></i> Player Transfer Window</h3>
-            <form id="form-transfer" onsubmit="executePlayerTransfer(event)" class="space-y-4">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-300 mb-1">Select Player to Transfer</label>
-                    <select id="transfer-player-select" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
-                        <!-- Dynamic -->
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-300 mb-1">New Destination Club</label>
-                    <select id="transfer-team-select" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
-                        <!-- Dynamic -->
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-300 mb-1">Transfer Note / Fee</label>
-                    <input type="text" id="transfer-note" placeholder="Season 2025 Transfer ($50M)" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
-                </div>
-                <div class="flex justify-end space-x-2 pt-2">
-                    <button type="button" onclick="closeModal('modal-transfer')" class="px-4 py-2 bg-slate-800 text-slate-300 text-xs font-bold rounded-xl">Cancel</button>
-                    <button type="submit" class="px-4 py-2 bg-brand-accent hover:bg-cyan-500 text-slate-950 font-black text-xs rounded-xl">Complete Transfer</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Match Log & Stats Modal -->
-    <div id="modal-match" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="glass-panel rounded-3xl max-w-3xl w-full p-6 space-y-5 border border-slate-800 shadow-2xl relative max-h-[92vh] overflow-y-auto custom-scrollbar">
-            <button onclick="closeModal('modal-match')" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
-            <h3 class="text-lg font-bold text-white flex items-center gap-2"><i class="fa-solid fa-stopwatch text-amber-400"></i> Record Game & Individual Stats</h3>
-            <form id="form-match" onsubmit="saveMatchRecord(event)" class="space-y-6">
-                
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-slate-950 p-4 rounded-2xl border border-slate-800">
+    <!-- MODAL: Player Profile View -->
+    <div id="playerProfileModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-slate-800 rounded-2xl border border-slate-700 w-full max-w-md p-6 space-y-4">
+            <div class="flex justify-between items-start border-b border-slate-700 pb-3">
+                <div class="flex items-center gap-3">
+                    <img id="profilePhoto" src="" class="w-14 h-14 rounded-full object-cover border-2 border-emerald-400 bg-slate-900">
                     <div>
-                        <label class="block text-[10px] uppercase font-mono text-slate-400 mb-1">Competition</label>
-                        <select id="match-comp-select" onchange="updateMatchTeamsDropdown()" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
-                            <!-- Dynamic -->
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-[10px] uppercase font-mono text-slate-400 mb-1">Match Date</label>
-                        <input type="date" id="match-date" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
-                    </div>
-                    <div>
-                        <label class="block text-[10px] uppercase font-mono text-slate-400 mb-1">Match Round / Stage</label>
-                        <input type="text" id="match-round" placeholder="Matchday 1 / Final" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                        <h3 class="text-xl font-bold text-slate-100" id="profileName">Player Name</h3>
+                        <p class="text-xs text-slate-400" id="profileTeamPos">Team • Position</p>
                     </div>
                 </div>
-
-                <!-- Teams Score Line -->
-                <div class="grid grid-cols-5 gap-3 items-center bg-slate-950 p-5 rounded-2xl border border-slate-800 text-center">
-                    <div class="col-span-2">
-                        <label class="block text-xs font-bold text-slate-300 mb-1">Home Team</label>
-                        <select id="match-home-team" onchange="renderPerGamePlayerStatsInputs()" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs font-bold text-white">
-                            <!-- Dynamic -->
-                        </select>
-                        <input type="number" id="match-home-score" min="0" value="0" class="mt-2 w-20 mx-auto text-center text-xl font-black bg-slate-900 border border-brand-500 rounded-xl py-1.5 text-white">
-                    </div>
-                    <div class="col-span-1 text-slate-500 font-mono font-black text-xl">VS</div>
-                    <div class="col-span-2">
-                        <label class="block text-xs font-bold text-slate-300 mb-1">Away Team</label>
-                        <select id="match-away-team" onchange="renderPerGamePlayerStatsInputs()" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs font-bold text-white">
-                            <!-- Dynamic -->
-                        </select>
-                        <input type="number" id="match-away-score" min="0" value="0" class="mt-2 w-20 mx-auto text-center text-xl font-black bg-slate-900 border border-brand-500 rounded-xl py-1.5 text-white">
-                    </div>
+                <button onclick="closePlayerProfileModal()" class="text-slate-400 hover:text-slate-200"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div class="grid grid-cols-3 gap-3 text-center bg-slate-900 p-3 rounded-xl border border-slate-700">
+                <div>
+                    <p class="text-xs text-slate-400">Goals</p>
+                    <p class="text-lg font-bold text-emerald-400" id="profileGoals">0</p>
                 </div>
-
-                <!-- Individual Per-Player Performance Logger -->
-                <div class="space-y-3">
-                    <h4 class="text-xs font-bold uppercase font-mono text-brand-400 tracking-wider">Individual Player Performance Logger</h4>
-                    <p class="text-[11px] text-slate-400">Log minutes, goals, assists, cards, and rating for home/away players.</p>
-                    <div id="match-player-stats-inputs" class="space-y-4 max-h-60 overflow-y-auto custom-scrollbar pr-1">
-                        <!-- Dynamic Player Input Rows -->
-                    </div>
+                <div>
+                    <p class="text-xs text-slate-400">Assists</p>
+                    <p class="text-lg font-bold text-blue-400" id="profileAssists">0</p>
                 </div>
-
-                <div class="flex justify-end space-x-2 pt-2 border-t border-slate-800">
-                    <button type="button" onclick="closeModal('modal-match')" class="px-4 py-2 bg-slate-800 text-slate-300 text-xs font-bold rounded-xl">Cancel</button>
-                    <button type="submit" class="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white text-xs font-bold rounded-xl">Save Match Record</button>
+                <div>
+                    <p class="text-xs text-slate-400">Rating</p>
+                    <p class="text-lg font-bold text-amber-400" id="profileRating">0.0</p>
                 </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Detailed Player Profile View Modal -->
-    <div id="modal-player-view" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="glass-panel rounded-3xl max-w-2xl w-full p-6 space-y-5 border border-slate-800 shadow-2xl relative max-h-[90vh] overflow-y-auto custom-scrollbar">
-            <button onclick="closeModal('modal-player-view')" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
-            <div id="player-view-content">
-                <!-- Dynamically populated via JS -->
+            </div>
+            <div class="flex justify-between items-center pt-2">
+                <button id="profileDeleteBtn" class="px-4 py-2 bg-red-600 hover:bg-red-500 text-white font-bold text-sm rounded-lg transition flex items-center gap-2">
+                    <i class="fa-solid fa-trash-can"></i> Delete Player
+                </button>
+                <button onclick="closePlayerProfileModal()" class="px-4 py-2 bg-slate-700 text-slate-200 font-semibold text-sm rounded-lg">Close</button>
             </div>
         </div>
     </div>
 
-    <!-- Notification Toast -->
-    <div id="toast" class="fixed bottom-6 right-6 z-50 transform translate-y-20 opacity-0 transition-all duration-300 glass-panel border border-brand-500/50 px-4 py-3 rounded-2xl shadow-2xl flex items-center space-x-3 pointer-events-none">
-        <div class="w-8 h-8 rounded-xl bg-brand-500/20 text-brand-400 flex items-center justify-center">
-            <i class="fa-solid fa-circle-check"></i>
-        </div>
-        <span id="toast-message" class="text-xs font-semibold text-white font-mono">Action saved successfully</span>
-    </div>
-
-    <!-- Application Script Core Engine -->
+    <!-- Application Script -->
     <script>
-        // ================= APPLICATION STATE & DATA MODEL =================
-        const STORAGE_KEY = 'PITCHMASTER_PRO_DB_V3';
-
-        let appData = {
-            activeSeasonId: 'season-2024-25',
-            seasons: [
-                { id: 'season-2024-25', name: '2024/25' },
-                { id: 'season-2025-26', name: '2025/26' }
+        // Core State
+        let state = {
+            activeSeason: "2026/27",
+            seasons: ["2026/27", "2025/26"],
+            competitions: [
+                { id: "c1", name: "Premier League", season: "2026/27", winPts: 3, drawPts: 1, lossPts: 0 }
             ],
-            competitions: [],
-            teams: [],
-            players: [],
+            teams: [
+                { id: "t1", name: "Arsenal FC", compId: "c1", season: "2026/27", logo: "https://upload.wikimedia.org/wikipedia/en/5/53/Arsenal_FC.svg" },
+                { id: "t2", name: "Manchester City", compId: "c1", season: "2026/27", logo: "https://upload.wikimedia.org/wikipedia/en/e/eb/Manchester_City_FC_badge.svg" }
+            ],
+            players: [
+                { id: "p1", name: "Bukayo Saka", teamId: "t1", position: "RW", number: 7, photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Bukayo_Saka.jpg/440px-Bukayo_Saka.jpg" }
+            ],
             matches: [],
-            transfers: []
+            tactics: {} // teamId -> positions setup
         };
 
-        // Active state helpers for tactics studio
-        let activeTacticsTeamId = null;
-        let draggingSlotIdx = null;
+        // Initialize App
+        window.addEventListener('DOMContentLoaded', () => {
+            loadLocalStorage();
+            renderSeasonsDropdown();
+            renderCompetitions();
+            renderTeams();
+            renderPlayers();
+            renderMatches();
+            loadTeamPitch(state.teams[0]?.id || "");
+        });
 
-        // Default Initial Demo Seed Data
-        function getInitialDemoData() {
-            return {
-                activeSeasonId: 'season-2024-25',
-                seasons: [
-                    { id: 'season-2024-25', name: '2024/25' },
-                    { id: 'season-2025-26', name: '2025/26' }
-                ],
-                competitions: [
-                    {
-                        id: 'comp-pl',
-                        seasonId: 'season-2024-25',
-                        name: 'Premier League',
-                        type: 'LEAGUE',
-                        tier: 'Tier 1',
-                        logo: 'https://placehold.co/100x100/1e1b4b/38bdf8?text=PL',
-                        ptsWin: 3,
-                        ptsDraw: 1,
-                        ptsLoss: 0
-                    },
-                    {
-                        id: 'comp-ucl',
-                        seasonId: 'season-2024-25',
-                        name: 'UEFA Champions Cup',
-                        type: 'CUP',
-                        tier: 'Continental',
-                        logo: 'https://placehold.co/100x100/0284c7/ffffff?text=UCL',
-                        ptsWin: 3,
-                        ptsDraw: 1,
-                        ptsLoss: 0
-                    }
-                ],
-                teams: [
-                    {
-                        id: 'team-ars',
-                        seasonId: 'season-2024-25',
-                        name: 'Arsenal FC',
-                        stadium: 'Emirates Stadium',
-                        crest: 'https://placehold.co/100x100/991b1b/ffffff?text=ARS',
-                        formation: '4-3-3',
-                        competitionIds: ['comp-pl', 'comp-ucl'],
-                        lineup: { 'pos-1': 'p-saka', 'pos-2': 'p-ode', 'pos-3': 'p-rice' }
-                    },
-                    {
-                        id: 'team-mci',
-                        seasonId: 'season-2024-25',
-                        name: 'Manchester City',
-                        stadium: 'Etihad Stadium',
-                        crest: 'https://placehold.co/100x100/0284c7/ffffff?text=MCI',
-                        formation: '4-2-3-1',
-                        competitionIds: ['comp-pl', 'comp-ucl'],
-                        lineup: { 'pos-1': 'p-haaland', 'pos-2': 'p-kdb' }
-                    },
-                    {
-                        id: 'team-rma',
-                        seasonId: 'season-2024-25',
-                        name: 'Real Madrid',
-                        stadium: 'Santiago Bernabéu',
-                        crest: 'https://placehold.co/100x100/1e293b/fbbf24?text=RMA',
-                        formation: '4-3-3',
-                        competitionIds: ['comp-ucl'],
-                        lineup: { 'pos-1': 'p-vini', 'pos-2': 'p-bellingham' }
-                    }
-                ],
-                players: [
-                    { id: 'p-saka', seasonId: 'season-2024-25', teamId: 'team-ars', name: 'Bukayo Saka', number: 7, primaryPos: 'RW', secondaryPos: 'RM', photo: 'https://placehold.co/150x150/0284c7/ffffff?text=BS', bio: 'World-class English winger known for pace & key passes.' },
-                    { id: 'p-ode', seasonId: 'season-2024-25', teamId: 'team-ars', name: 'Martin Ødegaard', number: 8, primaryPos: 'CAM', secondaryPos: 'CM', photo: 'https://placehold.co/150x150/0369a1/ffffff?text=MO', bio: 'Arsenal team captain and playmaking maestro.' },
-                    { id: 'p-rice', seasonId: 'season-2024-25', teamId: 'team-ars', name: 'Declan Rice', number: 4, primaryPos: 'CDM', secondaryPos: 'CM', photo: 'https://placehold.co/150x150/0c4a6e/ffffff?text=DR', bio: 'Powerhouse box-to-box midfielder.' },
-                    { id: 'p-haaland', seasonId: 'season-2024-25', teamId: 'team-mci', name: 'Erling Haaland', number: 9, primaryPos: 'ST', secondaryPos: 'CF', photo: 'https://placehold.co/150x150/0284c7/ffffff?text=EH', bio: 'Lethal goalscorer.' },
-                    { id: 'p-kdb', seasonId: 'season-2024-25', teamId: 'team-mci', name: 'Kevin De Bruyne', number: 17, primaryPos: 'CM', secondaryPos: 'CAM', photo: 'https://placehold.co/150x150/0369a1/ffffff?text=KDB', bio: 'Premier League assist record holder.' },
-                    { id: 'p-vini', seasonId: 'season-2024-25', teamId: 'team-rma', name: 'Vinícius Júnior', number: 7, primaryPos: 'LW', secondaryPos: 'ST', photo: 'https://placehold.co/150x150/fbbf24/000000?text=VJ', bio: 'Dynamic Brazilian winger.' },
-                    { id: 'p-bellingham', seasonId: 'season-2024-25', teamId: 'team-rma', name: 'Jude Bellingham', number: 5, primaryPos: 'CAM', secondaryPos: 'CM', photo: 'https://placehold.co/150x150/d97706/ffffff?text=JB', bio: 'High-scoring English midfielder.' }
-                ],
-                matches: [
-                    {
-                        id: 'match-1',
-                        competitionId: 'comp-pl',
-                        date: '2024-10-15',
-                        round: 'Matchday 1',
-                        homeTeamId: 'team-ars',
-                        awayTeamId: 'team-mci',
-                        homeScore: 2,
-                        awayScore: 1,
-                        playerStats: [
-                            { playerId: 'p-saka', minutes: 90, goals: 1, assists: 1, yellow: 0, red: 0, rating: 8.9 },
-                            { playerId: 'p-ode', minutes: 85, goals: 1, assists: 0, yellow: 0, red: 0, rating: 8.4 },
-                            { playerId: 'p-haaland', minutes: 90, goals: 1, assists: 0, yellow: 0, red: 0, rating: 7.6 }
-                        ]
-                    }
-                ],
-                transfers: []
-            };
+        // Local Storage Helpers
+        function saveLocalStorage() {
+            localStorage.setItem('pitchmaster_data', JSON.stringify(state));
         }
 
-        // Initialize Engine
-        function initApp() {
-            loadDatabase();
-            renderSeasonDropdowns();
-            renderDashboard();
+        function loadLocalStorage() {
+            const data = localStorage.getItem('pitchmaster_data');
+            if (data) {
+                try {
+                    state = JSON.parse(data);
+                } catch(e) {
+                    console.error("Could not parse saved data", e);
+                }
+            }
+        }
+
+        // Tab Navigation
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('border-b-2', 'border-emerald-400', 'text-emerald-400', 'bg-slate-800');
+                btn.classList.add('text-slate-400');
+            });
+            document.getElementById(`sec-${tabId}`).classList.remove('hidden');
+            const activeBtn = document.getElementById(`tab-${tabId}`);
+            activeBtn.classList.add('border-b-2', 'border-emerald-400', 'text-emerald-400', 'bg-slate-800');
+            activeBtn.classList.remove('text-slate-400');
+        }
+
+        // Seasons Management
+        function renderSeasonsDropdown() {
+            const select = document.getElementById('seasonSelect');
+            select.innerHTML = state.seasons.map(s => 
+                `<option value="${s}" ${s === state.activeSeason ? 'selected' : ''}>${s}</option>`
+            ).join('');
+        }
+
+        function switchSeason(seasonName) {
+            state.activeSeason = seasonName;
+            saveLocalStorage();
             renderCompetitions();
             renderTeams();
             renderPlayers();
             renderMatches();
         }
 
-        function loadDatabase() {
-            try {
-                const stored = localStorage.getItem(STORAGE_KEY);
-                if (stored) {
-                    appData = JSON.parse(stored);
-                } else {
-                    appData = getInitialDemoData();
-                    saveDatabase();
-                }
-            } catch (e) {
-                console.error("Storage error:", e);
-                appData = getInitialDemoData();
-            }
+        function openSeasonManager() {
+            renderSeasonsList();
+            document.getElementById('seasonModal').classList.remove('hidden');
         }
 
-        function saveDatabase() {
-            try {
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
-            } catch (e) {
-                console.error("Error saving data:", e);
-            }
+        function closeSeasonModal() {
+            document.getElementById('seasonModal').classList.add('hidden');
         }
 
-        function showToast(msg) {
-            const toast = document.getElementById('toast');
-            document.getElementById('toast-message').innerText = msg;
-            toast.classList.remove('translate-y-20', 'opacity-0');
-            setTimeout(() => {
-                toast.classList.add('translate-y-20', 'opacity-0');
-            }, 3000);
-        }
-
-        // ================= SEASON ARCHITECTURE =================
-        function renderSeasonDropdowns() {
-            const selDesktop = document.getElementById('season-selector');
-            const selMobile = document.getElementById('season-selector-mobile');
-            const selClone = document.getElementById('season-clone-select');
-
-            selDesktop.innerHTML = '';
-            selMobile.innerHTML = '';
-            selClone.innerHTML = '<option value="NONE">Start Fresh (Empty)</option>';
-
-            appData.seasons.forEach(s => {
-                selDesktop.innerHTML += `<option value="${s.id}" ${s.id === appData.activeSeasonId ? 'selected' : ''}>Season ${s.name}</option>`;
-                selMobile.innerHTML += `<option value="${s.id}" ${s.id === appData.activeSeasonId ? 'selected' : ''}>Season ${s.name}</option>`;
-                selClone.innerHTML += `<option value="${s.id}">Clone Teams & Competitions from ${s.name}</option>`;
-            });
-        }
-
-        function renderSeasonsManagementList() {
-            const list = document.getElementById('seasons-management-list');
-            list.innerHTML = '';
-
-            appData.seasons.forEach((s, idx) => {
-                const isActive = s.id === appData.activeSeasonId;
-                list.innerHTML += `
-                    <div class="bg-slate-950 p-3 rounded-2xl border ${isActive ? 'border-brand-500/60 bg-brand-950/20' : 'border-slate-800'} flex items-center justify-between gap-2">
-                        <div class="flex items-center space-x-2 flex-grow">
-                            <!-- Reorder Controls -->
-                            <div class="flex flex-col space-y-1">
-                                <button onclick="reorderSeason(${idx}, -1)" ${idx === 0 ? 'disabled class="opacity-20 text-slate-500"' : 'class="text-slate-400 hover:text-white"'} title="Move Up">
-                                    <i class="fa-solid fa-chevron-up text-[10px]"></i>
-                                </button>
-                                <button onclick="reorderSeason(${idx}, 1)" ${idx === appData.seasons.length - 1 ? 'disabled class="opacity-20 text-slate-500"' : 'class="text-slate-400 hover:text-white"'} title="Move Down">
-                                    <i class="fa-solid fa-chevron-down text-[10px]"></i>
-                                </button>
-                            </div>
-
-                            <!-- Editable Season Name -->
-                            <input type="text" value="${s.name}" onchange="renameSeason('${s.id}', this.value)" class="bg-slate-900 border border-slate-700 text-xs font-mono font-bold text-white px-2.5 py-1 rounded-xl focus:outline-none focus:border-brand-500 flex-grow max-w-[160px]">
-                            
-                            ${isActive ? `
-                                <span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-brand-950 text-brand-400 border border-brand-800">ACTIVE</span>
-                            ` : `
-                                <button onclick="changeSeason('${s.id}')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] font-bold rounded-xl transition">Set Active</button>
-                            `}
-                        </div>
-
-                        <!-- Delete Season -->
-                        <button onclick="deleteSeason('${s.id}')" class="text-slate-400 hover:text-rose-400 p-1.5 transition" title="Delete Season">
-                            <i class="fa-solid fa-trash-can text-xs"></i>
+        function renderSeasonsList() {
+            const container = document.getElementById('seasonsListContainer');
+            container.innerHTML = state.seasons.map((season, index) => `
+                <div class="flex items-center justify-between bg-slate-900 p-3 rounded-xl border border-slate-700">
+                    <span class="font-bold text-slate-200">${season} ${season === state.activeSeason ? '<span class="text-xs bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded border border-emerald-500/30 ml-2">Active</span>' : ''}</span>
+                    <div class="flex items-center gap-2">
+                        ${index > 0 ? `<button onclick="moveSeason(${index}, -1)" class="px-2 py-1 bg-slate-800 text-slate-300 hover:text-white rounded"><i class="fa-solid fa-arrow-up text-xs"></i></button>` : ''}
+                        ${index < state.seasons.length - 1 ? `<button onclick="moveSeason(${index}, 1)" class="px-2 py-1 bg-slate-800 text-slate-300 hover:text-white rounded"><i class="fa-solid fa-arrow-down text-xs"></i></button>` : ''}
+                        <button onclick="deleteSeason('${season}')" class="px-3 py-1 bg-red-600 hover:bg-red-500 text-white font-bold text-xs rounded transition flex items-center gap-1">
+                            <i class="fa-solid fa-trash-can"></i> Delete
                         </button>
                     </div>
-                `;
-            });
+                </div>
+            `).join('');
         }
 
-        function reorderSeason(index, direction) {
-            const newIndex = index + direction;
-            if (newIndex < 0 || newIndex >= appData.seasons.length) return;
-
-            const temp = appData.seasons[index];
-            appData.seasons[index] = appData.seasons[newIndex];
-            appData.seasons[newIndex] = temp;
-
-            saveDatabase();
-            renderSeasonDropdowns();
-            renderSeasonsManagementList();
-            showToast("Season order updated.");
-        }
-
-        function renameSeason(seasonId, newName) {
-            const season = appData.seasons.find(s => s.id === seasonId);
-            const trimmed = newName.trim();
-            if (season && trimmed) {
-                season.name = trimmed;
-                saveDatabase();
-                renderSeasonDropdowns();
-                renderSeasonsManagementList();
-                showToast(`Season renamed to "${trimmed}".`);
+        function addSeason() {
+            const input = document.getElementById('newSeasonName');
+            const val = input.value.trim();
+            if (val && !state.seasons.includes(val)) {
+                state.seasons.push(val);
+                state.activeSeason = val;
+                input.value = '';
+                saveLocalStorage();
+                renderSeasonsDropdown();
+                renderSeasonsList();
+                renderCompetitions();
+                renderTeams();
             }
         }
 
-        function deleteSeason(seasonId) {
-            if (appData.seasons.length <= 1) {
-                alert("Cannot delete the only season. You must have at least one season active.");
+        function moveSeason(index, direction) {
+            const target = index + direction;
+            if (target >= 0 && target < state.seasons.length) {
+                const temp = state.seasons[index];
+                state.seasons[index] = state.seasons[target];
+                state.seasons[target] = temp;
+                saveLocalStorage();
+                renderSeasonsDropdown();
+                renderSeasonsList();
+            }
+        }
+
+        function deleteSeason(seasonName) {
+            if (state.seasons.length <= 1) {
+                alert("You must keep at least one season.");
                 return;
             }
-
-            const season = appData.seasons.find(s => s.id === seasonId);
-            if (!season) return;
-
-            if (confirm(`Are you sure you want to delete Season "${season.name}"? All associated competitions, teams, players, and match records for this season will be deleted.`)) {
-                appData.seasons = appData.seasons.filter(s => s.id !== seasonId);
-                appData.competitions = appData.competitions.filter(c => c.seasonId !== seasonId);
-                appData.teams = appData.teams.filter(t => t.seasonId !== seasonId);
-                appData.players = appData.players.filter(p => p.seasonId !== seasonId);
-                
-                // Switch active season if the active one was deleted
-                if (appData.activeSeasonId === seasonId) {
-                    appData.activeSeasonId = appData.seasons[0].id;
+            if (confirm(`Are you sure you want to delete ${seasonName}?`)) {
+                state.seasons = state.seasons.filter(s => s !== seasonName);
+                if (state.activeSeason === seasonName) {
+                    state.activeSeason = state.seasons[0];
                 }
-
-                saveDatabase();
-                initApp();
-                renderSeasonsManagementList();
-                showToast(`Season "${season.name}" deleted.`);
+                saveLocalStorage();
+                renderSeasonsDropdown();
+                renderSeasonsList();
+                renderCompetitions();
+                renderTeams();
             }
         }
 
-        function changeSeason(seasonId) {
-            appData.activeSeasonId = seasonId;
-            saveDatabase();
-            initApp();
-            renderSeasonsManagementList();
-            showToast(`Switched to Season ${appData.seasons.find(s => s.id === seasonId)?.name}`);
-        }
-
-        function openSeasonModal() {
-            renderSeasonsManagementList();
-            document.getElementById('modal-season').classList.remove('hidden');
-        }
-
-        function saveSeason(e) {
-            e.preventDefault();
-            const name = document.getElementById('season-name-input').value.trim();
-            const cloneFrom = document.getElementById('season-clone-select').value;
-            const newId = 'season-' + Date.now();
-
-            if (!name) return;
-
-            appData.seasons.push({ id: newId, name: name });
-
-            // Clone setup if selected
-            if (cloneFrom !== 'NONE') {
-                const prevComps = appData.competitions.filter(c => c.seasonId === cloneFrom);
-                const prevTeams = appData.teams.filter(t => t.seasonId === cloneFrom);
-
-                const compMap = {};
-                prevComps.forEach(c => {
-                    const cId = 'comp-' + Date.now() + Math.random().toString(36).substr(2, 4);
-                    compMap[c.id] = cId;
-                    appData.competitions.push({ ...c, id: cId, seasonId: newId });
-                });
-
-                prevTeams.forEach(t => {
-                    const tId = 'team-' + Date.now() + Math.random().toString(36).substr(2, 4);
-                    const mappedCompIds = (t.competitionIds || []).map(cid => compMap[cid]).filter(Boolean);
-                    appData.teams.push({ ...t, id: tId, seasonId: newId, competitionIds: mappedCompIds });
-                });
-            }
-
-            appData.activeSeasonId = newId;
-            saveDatabase();
-            document.getElementById('season-name-input').value = '';
-            initApp();
-            renderSeasonsManagementList();
-            showToast(`New Season "${name}" Created.`);
-        }
-
-        // ================= TAB NAVIGATION ENGINE =================
-        function switchTab(tabId) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.classList.remove('bg-brand-600', 'text-white', 'shadow-lg');
-                btn.classList.add('text-slate-400');
-            });
-
-            const activeTab = document.getElementById(`tab-${tabId}`);
-            const activeNav = document.getElementById(`nav-${tabId}`);
-
-            if (activeTab) activeTab.classList.remove('hidden');
-            if (activeNav) {
-                activeNav.classList.add('bg-brand-600', 'text-white', 'shadow-lg');
-                activeNav.classList.remove('text-slate-400');
-            }
-
-            if (tabId === 'dashboard') renderDashboard();
-            if (tabId === 'competitions') renderCompetitions();
-            if (tabId === 'teams') renderTeams();
-            if (tabId === 'players') renderPlayers();
-            if (tabId === 'matches') renderMatches();
-        }
-
-        // ================= TAB 1: DASHBOARD ENGINE =================
-        function renderDashboard() {
-            const activeComps = appData.competitions.filter(c => c.seasonId === appData.activeSeasonId);
-            const activeTeams = appData.teams.filter(t => t.seasonId === appData.activeSeasonId);
-            const activePlayers = appData.players.filter(p => p.seasonId === appData.activeSeasonId);
-            const activeMatches = appData.matches.filter(m => {
-                const c = appData.competitions.find(comp => comp.id === m.competitionId);
-                return c && c.seasonId === appData.activeSeasonId;
-            });
-
-            document.getElementById('stat-competitions-count').innerText = activeComps.length;
-            document.getElementById('stat-teams-count').innerText = activeTeams.length;
-            document.getElementById('stat-players-count').innerText = activePlayers.length;
-            document.getElementById('stat-matches-count').innerText = activeMatches.length;
-
-            // League Selector
-            const dashSel = document.getElementById('dashboard-league-select');
-            dashSel.innerHTML = '';
-            const leagues = activeComps.filter(c => c.type === 'LEAGUE');
-            
-            if (leagues.length === 0) {
-                dashSel.innerHTML = '<option value="">No Active Leagues</option>';
-            } else {
-                leagues.forEach(l => {
-                    dashSel.innerHTML += `<option value="${l.id}">${l.name}</option>`;
-                });
-            }
-            renderDashboardStandings();
-            renderDashboardLeaderboards();
-        }
-
-        function calculateStandings(compId) {
-            const comp = appData.competitions.find(c => c.id === compId);
-            if (!comp) return [];
-
-            const teamsInComp = appData.teams.filter(t => t.seasonId === appData.activeSeasonId && t.competitionIds && t.competitionIds.includes(compId));
-            const matchesInComp = appData.matches.filter(m => m.competitionId === compId);
-
-            const table = teamsInComp.map(team => {
-                let stats = { team: team, mp: 0, w: 0, d: 0, l: 0, gf: 0, ga: 0, gd: 0, pts: 0 };
-                
-                matchesInComp.forEach(m => {
-                    if (m.homeTeamId === team.id) {
-                        stats.mp++;
-                        stats.gf += m.homeScore;
-                        stats.ga += m.awayScore;
-                        if (m.homeScore > m.awayScore) { stats.w++; stats.pts += (comp.ptsWin || 3); }
-                        else if (m.homeScore === m.awayScore) { stats.d++; stats.pts += (comp.ptsDraw || 1); }
-                        else { stats.l++; stats.pts += (comp.ptsLoss || 0); }
-                    } else if (m.awayTeamId === team.id) {
-                        stats.mp++;
-                        stats.gf += m.awayScore;
-                        stats.ga += m.homeScore;
-                        if (m.awayScore > m.homeScore) { stats.w++; stats.pts += (comp.ptsWin || 3); }
-                        else if (m.awayScore === m.homeScore) { stats.d++; stats.pts += (comp.ptsDraw || 1); }
-                        else { stats.l++; stats.pts += (comp.ptsLoss || 0); }
-                    }
-                });
-
-                stats.gd = stats.gf - stats.ga;
-                return stats;
-            });
-
-            // Sort rules: Points -> GD -> GF
-            table.sort((a, b) => b.pts - a.pts || b.gd - a.gd || b.gf - a.gf);
-            return table;
-        }
-
-        function renderDashboardStandings() {
-            const compId = document.getElementById('dashboard-league-select').value;
-            const tbody = document.getElementById('dashboard-standings-body');
-            tbody.innerHTML = '';
-
-            if (!compId) {
-                tbody.innerHTML = `<tr><td colspan="10" class="py-6 text-center text-slate-500">No league competition selected.</td></tr>`;
-                return;
-            }
-
-            const standings = calculateStandings(compId);
-            if (standings.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="10" class="py-6 text-center text-slate-500">No teams enrolled in this competition.</td></tr>`;
-                return;
-            }
-
-            standings.forEach((row, idx) => {
-                const rankClass = idx === 0 ? 'text-brand-gold font-black' : (idx < 4 ? 'text-brand-accent' : 'text-slate-400');
-                const defaultCrest = `https://placehold.co/40x40/1e293b/ffffff?text=${encodeURIComponent(row.team.name.substring(0, 3))}`;
-
-                tbody.innerHTML += `
-                    <tr class="hover:bg-slate-900/60 transition">
-                        <td class="py-3 px-3 font-bold ${rankClass}">${idx + 1}</td>
-                        <td class="py-3 px-3 flex items-center space-x-3 font-semibold text-white">
-                            <img src="${row.team.crest || defaultCrest}" onerror="this.src='${defaultCrest}'" class="w-6 h-6 rounded object-cover bg-slate-950">
-                            <span>${row.team.name}</span>
-                        </td>
-                        <td class="py-3 px-3 text-center">${row.mp}</td>
-                        <td class="py-3 px-3 text-center text-emerald-400">${row.w}</td>
-                        <td class="py-3 px-3 text-center text-slate-400">${row.d}</td>
-                        <td class="py-3 px-3 text-center text-rose-400">${row.l}</td>
-                        <td class="py-3 px-3 text-center">${row.gf}</td>
-                        <td class="py-3 px-3 text-center">${row.ga}</td>
-                        <td class="py-3 px-3 text-center ${row.gd > 0 ? 'text-emerald-400' : (row.gd < 0 ? 'text-rose-400' : '')}">${row.gd > 0 ? '+' + row.gd : row.gd}</td>
-                        <td class="py-3 px-3 text-center text-brand-400 font-bold text-sm bg-brand-950/30">${row.pts}</td>
-                    </tr>
-                `;
-            });
-        }
-
-        function getPlayerAccumulatedStats(playerId) {
-            let stats = { apps: 0, goals: 0, assists: 0, yellows: 0, reds: 0, totalRating: 0, ratingsCount: 0, avgRating: '0.0' };
-            
-            appData.matches.forEach(m => {
-                if (m.playerStats) {
-                    const ps = m.playerStats.find(x => x.playerId === playerId);
-                    if (ps && ps.minutes > 0) {
-                        stats.apps++;
-                        stats.goals += (ps.goals || 0);
-                        stats.assists += (ps.assists || 0);
-                        stats.yellows += (ps.yellow || 0);
-                        stats.reds += (ps.red || 0);
-                        if (ps.rating && ps.rating > 0) {
-                            stats.totalRating += parseFloat(ps.rating);
-                            stats.ratingsCount++;
-                        }
-                    }
-                }
-            });
-
-            if (stats.ratingsCount > 0) {
-                stats.avgRating = (stats.totalRating / stats.ratingsCount).toFixed(1);
-            }
-            return stats;
-        }
-
-        function renderDashboardLeaderboards() {
-            const activePlayers = appData.players.filter(p => p.seasonId === appData.activeSeasonId);
-            
-            const playerStatsList = activePlayers.map(p => {
-                return { player: p, team: appData.teams.find(t => t.id === p.teamId), ...getPlayerAccumulatedStats(p.id) };
-            });
-
-            // Goals Leaderboard
-            const scorers = [...playerStatsList].sort((a, b) => b.goals - a.goals || b.assists - a.assists).slice(0, 3);
-            const scorerContainer = document.getElementById('dash-top-scorers');
-            scorerContainer.innerHTML = '';
-            
-            scorers.forEach((s, i) => {
-                if (s.goals > 0) {
-                    scorerContainer.innerHTML += `
-                        <div class="flex items-center justify-between bg-slate-950 p-2.5 rounded-xl border border-slate-800">
-                            <div class="flex items-center space-x-3">
-                                <span class="font-mono text-xs font-bold text-brand-gold">#${i+1}</span>
-                                <div>
-                                    <h4 class="text-xs font-bold text-white cursor-pointer hover:text-brand-400" onclick="viewPlayerProfile('${s.player.id}')">${s.player.name}</h4>
-                                    <p class="text-[10px] text-slate-400">${s.team ? s.team.name : 'Unassigned'}</p>
-                                </div>
-                            </div>
-                            <span class="text-xs font-black font-mono text-brand-400 bg-brand-950 px-2 py-1 rounded-lg border border-brand-800">${s.goals} Goals</span>
-                        </div>
-                    `;
-                }
-            });
-
-            if (scorerContainer.innerHTML === '') scorerContainer.innerHTML = '<p class="text-xs text-slate-500 py-2">No goals logged yet.</p>';
-
-            // Assists Leaderboard
-            const assists = [...playerStatsList].sort((a, b) => b.assists - a.assists || b.goals - a.goals).slice(0, 3);
-            const assistContainer = document.getElementById('dash-top-assists');
-            assistContainer.innerHTML = '';
-
-            assists.forEach((a, i) => {
-                if (a.assists > 0) {
-                    assistContainer.innerHTML += `
-                        <div class="flex items-center justify-between bg-slate-950 p-2.5 rounded-xl border border-slate-800">
-                            <div class="flex items-center space-x-3">
-                                <span class="font-mono text-xs font-bold text-brand-accent">#${i+1}</span>
-                                <div>
-                                    <h4 class="text-xs font-bold text-white cursor-pointer hover:text-brand-400" onclick="viewPlayerProfile('${a.player.id}')">${a.player.name}</h4>
-                                    <p class="text-[10px] text-slate-400">${a.team ? a.team.name : 'Unassigned'}</p>
-                                </div>
-                            </div>
-                            <span class="text-xs font-black font-mono text-brand-accent bg-cyan-950 px-2 py-1 rounded-lg border border-cyan-800">${a.assists} Assists</span>
-                        </div>
-                    `;
-                }
-            });
-
-            if (assistContainer.innerHTML === '') assistContainer.innerHTML = '<p class="text-xs text-slate-500 py-2">No assists logged yet.</p>';
-        }
-
-        // ================= TAB 2: COMPETITIONS & BRACKETS =================
+        // Competitions CRUD
         function renderCompetitions() {
-            const grid = document.getElementById('competitions-grid');
-            grid.innerHTML = '';
-            const comps = appData.competitions.filter(c => c.seasonId === appData.activeSeasonId);
-
+            const grid = document.getElementById('competitionsGrid');
+            const comps = state.competitions.filter(c => c.season === state.activeSeason);
+            
             if (comps.length === 0) {
-                grid.innerHTML = `<div class="col-span-full text-center py-12 text-slate-500 text-xs">No competitions created for this season yet.</div>`;
+                grid.innerHTML = `<div class="col-span-full text-center py-8 text-slate-500">No competitions for ${state.activeSeason}. Click "Add Competition" to start.</div>`;
                 return;
             }
 
-            comps.forEach(c => {
-                const teamsInComp = appData.teams.filter(t => t.seasonId === appData.activeSeasonId && t.competitionIds && t.competitionIds.includes(c.id));
-                const matchesInComp = appData.matches.filter(m => m.competitionId === c.id);
-                const defaultLogo = 'https://placehold.co/100x100/1e293b/22c55e?text=CUP';
-
-                grid.innerHTML += `
-                    <div class="glass-card rounded-3xl p-5 flex flex-col justify-between hover:border-slate-700 transition shadow-xl">
-                        <div>
-                            <div class="flex items-center justify-between gap-3 mb-4">
-                                <div class="flex items-center space-x-3">
-                                    <img src="${c.logo || defaultLogo}" onerror="this.src='${defaultLogo}'" class="w-12 h-12 rounded-2xl object-cover bg-slate-950 p-1 border border-slate-800">
-                                    <div>
-                                        <h3 class="font-bold text-base text-white leading-tight">${c.name}</h3>
-                                        <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-indigo-950 text-indigo-300 border border-indigo-800 font-mono">${c.type} (${c.tier || 'Division 1'})</span>
-                                    </div>
-                                </div>
-                                <div class="flex items-center space-x-1">
-                                    <button onclick="openCompetitionModal('${c.id}')" class="text-slate-400 hover:text-white p-1.5"><i class="fa-solid fa-pen text-xs"></i></button>
-                                    <button onclick="deleteCompetition('${c.id}')" title="Delete Competition" class="text-slate-400 hover:text-rose-400 p-1.5"><i class="fa-solid fa-trash-can text-xs"></i></button>
-                                </div>
-                            </div>
-                            <div class="bg-slate-950/80 p-3 rounded-2xl text-xs text-slate-300 space-y-1 font-mono border border-slate-800">
-                                <div class="flex justify-between"><span class="text-slate-500">Points Engine:</span><span>W:${c.ptsWin} D:${c.ptsDraw} L:${c.ptsLoss}</span></div>
-                                <div class="flex justify-between"><span class="text-slate-500">Enrolled Clubs:</span><span>${teamsInComp.length} Teams</span></div>
-                                <div class="flex justify-between"><span class="text-slate-500">Games Logged:</span><span>${matchesInComp.length} Matches</span></div>
+            grid.innerHTML = comps.map(c => `
+                <div class="bg-slate-800 p-5 rounded-2xl border border-slate-700 flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="font-bold text-lg text-slate-100">${c.name}</h3>
+                            <div class="flex gap-2">
+                                <button onclick="deleteCompetition('${c.id}')" class="px-2.5 py-1.5 bg-red-600/20 border border-red-500/40 text-red-400 hover:bg-red-600 hover:text-white rounded-lg text-xs font-bold transition flex items-center gap-1">
+                                    <i class="fa-solid fa-trash-can"></i> Delete
+                                </button>
                             </div>
                         </div>
-                        <div class="mt-4 pt-3 border-t border-slate-800/60 flex justify-end">
-                            <button onclick="viewCompetitionDashboard('${c.id}')" class="text-xs text-brand-400 hover:text-brand-300 font-bold flex items-center space-x-1">
-                                <span>Open View & Brackets</span> <i class="fa-solid fa-arrow-right"></i>
-                            </button>
+                        <div class="text-xs text-slate-400 space-y-1">
+                            <p>Win: <span class="text-emerald-400 font-bold">${c.winPts} pts</span> | Draw: <span class="text-amber-400 font-bold">${c.drawPts} pts</span> | Loss: <span class="text-red-400 font-bold">${c.lossPts} pts</span></p>
                         </div>
                     </div>
-                `;
-            });
+                </div>
+            `).join('');
         }
 
-        function openCompetitionModal(compId = null) {
-            const modal = document.getElementById('modal-competition');
-            const title = document.getElementById('modal-comp-title');
-            
-            if (compId) {
-                const comp = appData.competitions.find(c => c.id === compId);
-                if (!comp) return;
-                title.innerText = 'Edit Competition';
-                document.getElementById('comp-id-input').value = comp.id;
-                document.getElementById('comp-name').value = comp.name;
-                document.getElementById('comp-type').value = comp.type;
-                document.getElementById('comp-tier').value = comp.tier || '';
-                document.getElementById('comp-logo').value = comp.logo || '';
-                document.getElementById('comp-pts-win').value = comp.ptsWin || 3;
-                document.getElementById('comp-pts-draw').value = comp.ptsDraw || 1;
-                document.getElementById('comp-pts-loss').value = comp.ptsLoss || 0;
-            } else {
-                title.innerText = 'Create Competition';
-                document.getElementById('form-competition').reset();
-                document.getElementById('comp-id-input').value = '';
-            }
+        function openCompetitionModal() {
+            document.getElementById('compForm').reset();
+            document.getElementById('compEditId').value = '';
+            document.getElementById('compModal').classList.remove('hidden');
+        }
 
-            modal.classList.remove('hidden');
+        function closeCompModal() {
+            document.getElementById('compModal').classList.add('hidden');
         }
 
         function saveCompetition(e) {
             e.preventDefault();
-            const id = document.getElementById('comp-id-input').value;
-            const compData = {
-                id: id || ('comp-' + Date.now()),
-                seasonId: appData.activeSeasonId,
-                name: document.getElementById('comp-name').value.trim(),
-                type: document.getElementById('comp-type').value,
-                tier: document.getElementById('comp-tier').value.trim(),
-                logo: document.getElementById('comp-logo').value.trim(),
-                ptsWin: parseInt(document.getElementById('comp-pts-win').value) || 3,
-                ptsDraw: parseInt(document.getElementById('comp-pts-draw').value) || 1,
-                ptsLoss: parseInt(document.getElementById('comp-pts-loss').value) || 0,
+            const id = document.getElementById('compEditId').value || 'c_' + Date.now();
+            const comp = {
+                id,
+                name: document.getElementById('compName').value.trim(),
+                winPts: parseInt(document.getElementById('compWinPts').value),
+                drawPts: parseInt(document.getElementById('compDrawPts').value),
+                lossPts: parseInt(document.getElementById('compLossPts').value),
+                season: state.activeSeason
             };
 
-            if (id) {
-                const idx = appData.competitions.findIndex(c => c.id === id);
-                if (idx !== -1) appData.competitions[idx] = compData;
+            const existingIdx = state.competitions.findIndex(c => c.id === id);
+            if (existingIdx > -1) {
+                state.competitions[existingIdx] = comp;
             } else {
-                appData.competitions.push(compData);
+                state.competitions.push(comp);
             }
 
-            saveDatabase();
-            closeModal('modal-competition');
+            saveLocalStorage();
+            closeCompModal();
             renderCompetitions();
-            showToast(`Competition "${compData.name}" saved.`);
         }
 
-        function deleteCompetition(compId) {
-            const comp = appData.competitions.find(c => c.id === compId);
-            if (!comp) return;
-            if (confirm(`Are you sure you want to delete "${comp.name}"? This will also remove matches logged under this competition.`)) {
-                appData.competitions = appData.competitions.filter(c => c.id !== compId);
-                appData.matches = appData.matches.filter(m => m.competitionId !== compId);
-                appData.teams.forEach(t => {
-                    if (t.competitionIds) t.competitionIds = t.competitionIds.filter(id => id !== compId);
-                });
-                saveDatabase();
+        function deleteCompetition(id) {
+            if (confirm("Delete this competition?")) {
+                state.competitions = state.competitions.filter(c => c.id !== id);
+                saveLocalStorage();
                 renderCompetitions();
-                showToast(`Competition "${comp.name}" deleted.`);
             }
         }
 
-        function viewCompetitionDashboard(compId) {
-            const comp = appData.competitions.find(c => c.id === compId);
-            if (!comp) return;
-
-            const view = document.getElementById('competition-detail-view');
-            document.getElementById('comp-detail-title').innerText = comp.name;
-            document.getElementById('comp-detail-badge').innerText = comp.type;
-            const container = document.getElementById('comp-detail-render');
-
-            if (comp.type === 'LEAGUE') {
-                const standings = calculateStandings(compId);
-                container.innerHTML = `
-                    <table class="w-full text-left text-xs text-slate-300 font-mono">
-                        <thead class="bg-slate-950 text-[10px] uppercase text-slate-400 border-b border-slate-800">
-                            <tr><th class="py-3 px-3">#</th><th class="py-3 px-3">Team</th><th class="py-3 px-3 text-center">MP</th><th class="py-3 px-3 text-center text-emerald-400">W</th><th class="py-3 px-3 text-center">D</th><th class="py-3 px-3 text-center text-rose-400">L</th><th class="py-3 px-3 text-center">GF</th><th class="py-3 px-3 text-center">GA</th><th class="py-3 px-3 text-center">GD</th><th class="py-3 px-3 text-center text-brand-400 font-bold">PTS</th></tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-800/60">
-                            ${standings.map((r, i) => `
-                                <tr>
-                                    <td class="py-3 px-3 font-bold text-brand-gold">${i+1}</td>
-                                    <td class="py-3 px-3 font-semibold text-white">${r.team.name}</td>
-                                    <td class="py-3 px-3 text-center">${r.mp}</td>
-                                    <td class="py-3 px-3 text-center text-emerald-400">${r.w}</td>
-                                    <td class="py-3 px-3 text-center">${r.d}</td>
-                                    <td class="py-3 px-3 text-center text-rose-400">${r.l}</td>
-                                    <td class="py-3 px-3 text-center">${r.gf}</td>
-                                    <td class="py-3 px-3 text-center">${r.ga}</td>
-                                    <td class="py-3 px-3 text-center">${r.gd > 0 ? '+' + r.gd : r.gd}</td>
-                                    <td class="py-3 px-3 text-center text-brand-400 font-bold bg-brand-950/30">${r.pts}</td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
-                `;
-            } else {
-                // Cup Knockout Visualiser
-                const matches = appData.matches.filter(m => m.competitionId === compId);
-                container.innerHTML = `
-                    <div class="space-y-6">
-                        <h4 class="text-xs font-mono font-bold text-slate-400 uppercase">Knockout Tournament Fixtures</h4>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            ${matches.length === 0 ? '<p class="text-xs text-slate-500">No cup matches logged yet.</p>' : matches.map(m => {
-                                const home = appData.teams.find(t => t.id === m.homeTeamId);
-                                const away = appData.teams.find(t => t.id === m.awayTeamId);
-                                return `
-                                    <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800 flex justify-between items-center text-xs">
-                                        <span class="font-mono text-slate-500">${m.round}</span>
-                                        <div class="font-bold space-x-3 font-mono">
-                                            <span class="${m.homeScore > m.awayScore ? 'text-brand-400' : 'text-slate-300'}">${home ? home.name : 'Home'} (${m.homeScore})</span>
-                                            <span class="text-slate-600">vs</span>
-                                            <span class="${m.awayScore > m.homeScore ? 'text-brand-400' : 'text-slate-300'}">(${m.awayScore}) ${away ? away.name : 'Away'}</span>
-                                        </div>
-                                    </div>
-                                `;
-                            }).join('')}
-                        </div>
-                    </div>
-                `;
-            }
-
-            view.classList.remove('hidden');
-        }
-
-        function closeCompDetail() {
-            document.getElementById('competition-detail-view').classList.add('hidden');
-        }
-
-        // ================= TAB 3: TEAMS & TACTICAL PITCH =================
+        // Teams & Tactics CRUD
         function renderTeams() {
-            const grid = document.getElementById('teams-grid');
-            grid.innerHTML = '';
-            const teams = appData.teams.filter(t => t.seasonId === appData.activeSeasonId);
+            const grid = document.getElementById('teamsGrid');
+            const teams = state.teams.filter(t => t.season === state.activeSeason);
+            
+            // Populate select dropdowns
+            const select = document.getElementById('tacticsTeamSelect');
+            select.innerHTML = teams.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
 
             if (teams.length === 0) {
-                grid.innerHTML = `<div class="col-span-full text-center py-12 text-slate-500 text-xs">No teams added for this season yet.</div>`;
+                grid.innerHTML = `<div class="col-span-full text-center py-8 text-slate-500">No teams found.</div>`;
                 return;
             }
 
-            teams.forEach(t => {
-                const players = appData.players.filter(p => p.seasonId === appData.activeSeasonId && p.teamId === t.id);
-                const defaultCrest = `https://placehold.co/100x100/1e293b/38bdf8?text=${encodeURIComponent(t.name.substring(0, 3).toUpperCase())}`;
-
-                grid.innerHTML += `
-                    <div class="glass-card rounded-3xl p-5 flex flex-col justify-between hover:border-slate-700 transition shadow-xl">
-                        <div>
-                            <div class="flex items-start justify-between">
-                                <div class="flex items-center space-x-3">
-                                    <img src="${t.crest || defaultCrest}" onerror="this.src='${defaultCrest}'" class="w-12 h-12 rounded-2xl object-cover bg-slate-950 p-1 border border-slate-800">
-                                    <div>
-                                        <h3 class="font-bold text-base text-white leading-tight">${t.name}</h3>
-                                        <p class="text-[11px] text-slate-400"><i class="fa-solid fa-location-dot mr-1"></i>${t.stadium || 'Home Park'}</p>
-                                    </div>
-                                </div>
-                                <div class="flex items-center space-x-1">
-                                    <button onclick="openTeamModal('${t.id}')" class="text-slate-400 hover:text-white p-1"><i class="fa-solid fa-pen text-xs"></i></button>
-                                    <button onclick="deleteTeam('${t.id}')" title="Delete Team" class="text-slate-400 hover:text-rose-400 p-1"><i class="fa-solid fa-trash-can text-xs"></i></button>
-                                </div>
-                            </div>
-
-                            <div class="mt-4 bg-slate-950 p-3 rounded-2xl border border-slate-800 space-y-2">
-                                <div class="flex justify-between items-center text-xs font-mono">
-                                    <span class="text-slate-400">Tactical Preset:</span>
-                                    <span class="text-brand-400 font-bold">${t.formation || '4-3-3'}</span>
-                                </div>
-                                <div class="flex justify-between items-center text-xs font-mono">
-                                    <span class="text-slate-400">Squad Roster:</span>
-                                    <span class="text-white font-bold">${players.length} Players</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="mt-5 pt-3 border-t border-slate-800/60 flex justify-between items-center">
-                            <button onclick="openTacticsModal('${t.id}')" class="px-3.5 py-1.5 bg-brand-600/20 text-brand-400 hover:bg-brand-600 hover:text-white border border-brand-500/30 rounded-xl text-xs font-bold transition flex items-center gap-1.5">
-                                <i class="fa-solid fa-chalkboard-user"></i> Tactical Pitch Board
-                            </button>
-                        </div>
+            grid.innerHTML = teams.map(t => `
+                <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <img src="${t.logo || 'https://via.placeholder.com/40'}" class="w-10 h-10 object-contain">
+                        <span class="font-bold text-slate-200 text-sm">${t.name}</span>
                     </div>
-                `;
-            });
+                    <button onclick="deleteTeam('${t.id}')" class="px-2.5 py-1.5 bg-red-600/20 border border-red-500/40 text-red-400 hover:bg-red-600 hover:text-white rounded-lg text-xs font-bold transition flex items-center gap-1">
+                        <i class="fa-solid fa-trash-can"></i> Delete
+                    </button>
+                </div>
+            `).join('');
         }
 
-        function openTeamModal(teamId = null) {
-            const modal = document.getElementById('modal-team');
-            const title = document.getElementById('modal-team-title');
-            const compCheckboxes = document.getElementById('team-comp-checkboxes');
-            
-            const comps = appData.competitions.filter(c => c.seasonId === appData.activeSeasonId);
-            compCheckboxes.innerHTML = '';
-            
-            if (comps.length === 0) {
-                compCheckboxes.innerHTML = `<p class="text-xs text-slate-500">No competitions created for this season yet.</p>`;
-            }
+        function openTeamModal() {
+            const compSelect = document.getElementById('teamCompId');
+            compSelect.innerHTML = state.competitions
+                .filter(c => c.season === state.activeSeason)
+                .map(c => `<option value="${c.id}">${c.name}</option>`).join('');
 
-            if (teamId) {
-                const team = appData.teams.find(t => t.id === teamId);
-                if (!team) return;
-                title.innerText = 'Edit Team Profile';
-                document.getElementById('team-id-input').value = team.id;
-                document.getElementById('team-name').value = team.name;
-                document.getElementById('team-stadium').value = team.stadium || '';
-                document.getElementById('team-formation').value = team.formation || '4-3-3';
-                document.getElementById('team-crest').value = team.crest || '';
+            document.getElementById('teamForm').reset();
+            document.getElementById('teamEditId').value = '';
+            document.getElementById('teamModal').classList.remove('hidden');
+        }
 
-                comps.forEach(c => {
-                    const isChecked = team.competitionIds && team.competitionIds.includes(c.id);
-                    compCheckboxes.innerHTML += `
-                        <label class="flex items-center space-x-2 text-xs text-slate-300 cursor-pointer">
-                            <input type="checkbox" value="${c.id}" ${isChecked ? 'checked' : ''} class="team-comp-cb rounded bg-slate-900 border-slate-700 text-brand-500 focus:ring-0">
-                            <span>${c.name} (${c.type})</span>
-                        </label>
-                    `;
-                });
-            } else {
-                title.innerText = 'Add New Team';
-                document.getElementById('form-team').reset();
-                document.getElementById('team-id-input').value = '';
-
-                comps.forEach(c => {
-                    compCheckboxes.innerHTML += `
-                        <label class="flex items-center space-x-2 text-xs text-slate-300 cursor-pointer">
-                            <input type="checkbox" value="${c.id}" class="team-comp-cb rounded bg-slate-900 border-slate-700 text-brand-500 focus:ring-0">
-                            <span>${c.name} (${c.type})</span>
-                        </label>
-                    `;
-                });
-            }
-
-            modal.classList.remove('hidden');
+        function closeTeamModal() {
+            document.getElementById('teamModal').classList.add('hidden');
         }
 
         function saveTeam(e) {
             e.preventDefault();
-            const id = document.getElementById('team-id-input').value;
-            const selectedCompIds = Array.from(document.querySelectorAll('.team-comp-cb:checked')).map(cb => cb.value);
-
-            const teamData = {
-                id: id || ('team-' + Date.now()),
-                seasonId: appData.activeSeasonId,
-                name: document.getElementById('team-name').value.trim(),
-                stadium: document.getElementById('team-stadium').value.trim(),
-                formation: document.getElementById('team-formation').value,
-                crest: document.getElementById('team-crest').value.trim(),
-                competitionIds: selectedCompIds,
-                lineup: id ? (appData.teams.find(t => t.id === id)?.lineup || {}) : {}
+            const id = document.getElementById('teamEditId').value || 't_' + Date.now();
+            const team = {
+                id,
+                name: document.getElementById('teamName').value.trim(),
+                compId: document.getElementById('teamCompId').value,
+                logo: document.getElementById('teamLogo').value.trim(),
+                season: state.activeSeason
             };
 
-            if (id) {
-                const idx = appData.teams.findIndex(t => t.id === id);
-                if (idx !== -1) appData.teams[idx] = teamData;
+            const existingIdx = state.teams.findIndex(t => t.id === id);
+            if (existingIdx > -1) {
+                state.teams[existingIdx] = team;
             } else {
-                appData.teams.push(teamData);
+                state.teams.push(team);
             }
 
-            saveDatabase();
-            closeModal('modal-team');
+            saveLocalStorage();
+            closeTeamModal();
             renderTeams();
-            showToast(`Team "${teamData.name}" saved.`);
         }
 
-        function deleteTeam(teamId) {
-            const team = appData.teams.find(t => t.id === teamId);
-            if (!team) return;
-            if (confirm(`Are you sure you want to delete team "${team.name}"? Players will become free agents.`)) {
-                appData.teams = appData.teams.filter(t => t.id !== teamId);
-                appData.players.forEach(p => {
-                    if (p.teamId === teamId) p.teamId = '';
-                });
-                saveDatabase();
+        function deleteTeam(id) {
+            if (confirm("Delete this team?")) {
+                state.teams = state.teams.filter(t => t.id !== id);
+                saveLocalStorage();
                 renderTeams();
-                showToast(`Team "${team.name}" deleted.`);
             }
         }
 
-        // ================= TACTICAL PITCH STUDIO ENGINE =================
-        const formationCoordinates = {
-            '4-3-3': [
-                { pos: 'GK', top: 88, left: 50 },
-                { pos: 'LB', top: 70, left: 15 },
-                { pos: 'CB', top: 74, left: 38 },
-                { pos: 'CB', top: 74, left: 62 },
-                { pos: 'RB', top: 70, left: 85 },
-                { pos: 'CDM', top: 52, left: 50 },
-                { pos: 'CM', top: 38, left: 32 },
-                { pos: 'CM', top: 38, left: 68 },
-                { pos: 'LW', top: 18, left: 18 },
-                { pos: 'ST', top: 12, left: 50 },
-                { pos: 'RW', top: 18, left: 82 }
-            ],
-            '4-2-3-1': [
-                { pos: 'GK', top: 88, left: 50 },
-                { pos: 'LB', top: 70, left: 15 },
-                { pos: 'CB', top: 74, left: 38 },
-                { pos: 'CB', top: 74, left: 62 },
-                { pos: 'RB', top: 70, left: 85 },
-                { pos: 'CDM', top: 55, left: 35 },
-                { pos: 'CDM', top: 55, left: 65 },
-                { pos: 'LM', top: 32, left: 18 },
-                { pos: 'CAM', top: 30, left: 50 },
-                { pos: 'RM', top: 32, left: 82 },
-                { pos: 'ST', top: 12, left: 50 }
-            ],
-            '4-4-2': [
-                { pos: 'GK', top: 88, left: 50 },
-                { pos: 'LB', top: 70, left: 15 },
-                { pos: 'CB', top: 74, left: 38 },
-                { pos: 'CB', top: 74, left: 62 },
-                { pos: 'RB', top: 70, left: 85 },
-                { pos: 'LM', top: 45, left: 18 },
-                { pos: 'CM', top: 48, left: 38 },
-                { pos: 'CM', top: 48, left: 62 },
-                { pos: 'RM', top: 45, left: 82 },
-                { pos: 'ST', top: 16, left: 38 },
-                { pos: 'ST', top: 16, left: 62 }
-            ],
-            '3-5-2': [
-                { pos: 'GK', top: 88, left: 50 },
-                { pos: 'CB', top: 74, left: 25 },
-                { pos: 'CB', top: 76, left: 50 },
-                { pos: 'CB', top: 74, left: 75 },
-                { pos: 'LWB', top: 45, left: 12 },
-                { pos: 'CDM', top: 52, left: 38 },
-                { pos: 'CDM', top: 52, left: 62 },
-                { pos: 'RWB', top: 45, left: 88 },
-                { pos: 'CAM', top: 32, left: 50 },
-                { pos: 'ST', top: 14, left: 38 },
-                { pos: 'ST', top: 14, left: 62 }
-            ],
-            '5-3-2': [
-                { pos: 'GK', top: 88, left: 50 },
-                { pos: 'LWB', top: 68, left: 12 },
-                { pos: 'CB', top: 74, left: 30 },
-                { pos: 'CB', top: 76, left: 50 },
-                { pos: 'CB', top: 74, left: 70 },
-                { pos: 'RWB', top: 68, left: 88 },
-                { pos: 'CM', top: 46, left: 28 },
-                { pos: 'CM', top: 48, left: 50 },
-                { pos: 'CM', top: 46, left: 72 },
-                { pos: 'ST', top: 16, left: 38 },
-                { pos: 'ST', top: 16, left: 62 }
-            ],
-            '3-4-3': [
-                { pos: 'GK', top: 88, left: 50 },
-                { pos: 'CB', top: 74, left: 25 },
-                { pos: 'CB', top: 76, left: 50 },
-                { pos: 'CB', top: 74, left: 75 },
-                { pos: 'LM', top: 45, left: 15 },
-                { pos: 'CM', top: 48, left: 38 },
-                { pos: 'CM', top: 48, left: 62 },
-                { pos: 'RM', top: 45, left: 85 },
-                { pos: 'LW', top: 18, left: 20 },
-                { pos: 'ST', top: 14, left: 50 },
-                { pos: 'RW', top: 18, left: 80 }
-            ]
-        };
-
-        function openTacticsModal(teamId) {
-            activeTacticsTeamId = teamId;
-            const team = appData.teams.find(t => t.id === teamId);
-            if (!team) return;
-
-            document.getElementById('tactics-team-title').innerText = `${team.name} • Tactical Pitch Board`;
-            document.getElementById('tactics-formation-select').value = team.formation || '4-3-3';
-            
-            renderTacticsPitch();
-            document.getElementById('modal-tactics').classList.remove('hidden');
+        // Tactical Pitch Studio Logic
+        function loadTeamPitch(teamId) {
+            if (!teamId) return;
+            let setup = state.tactics[teamId] || getDefaultFormation('4-3-3');
+            renderTacticalNodes(setup);
+            renderPositionCustomizer(setup);
         }
 
-        function changeTacticsFormation(fmt) {
-            const team = appData.teams.find(t => t.id === activeTacticsTeamId);
-            if (team) {
-                team.formation = fmt;
-                if (fmt !== 'CUSTOM' && formationCoordinates[fmt]) {
-                    team.customCoordinates = JSON.parse(JSON.stringify(formationCoordinates[fmt]));
-                }
-                saveDatabase();
-                renderTacticsPitch();
-            }
+        function getDefaultFormation(preset) {
+            // Default node positions in percentage
+            const presets = {
+                '4-3-3': [
+                    { id: 1, pos: 'GK', x: 50, y: 88 },
+                    { id: 2, pos: 'LB', x: 15, y: 68 },
+                    { id: 3, pos: 'CB', x: 38, y: 72 },
+                    { id: 4, pos: 'CB', x: 62, y: 72 },
+                    { id: 5, pos: 'RB', x: 85, y: 68 },
+                    { id: 6, pos: 'CDM', x: 50, y: 52 },
+                    { id: 7, pos: 'CM', x: 32, y: 40 },
+                    { id: 8, pos: 'CM', x: 68, y: 40 },
+                    { id: 9, pos: 'LW', x: 20, y: 18 },
+                    { id: 10, pos: 'ST', x: 50, y: 14 },
+                    { id: 11, pos: 'RW', x: 80, y: 18 }
+                ]
+            };
+            return presets[preset] || presets['4-3-3'];
         }
 
-        function resetPitchLayout() {
-            const team = appData.teams.find(t => t.id === activeTacticsTeamId);
-            if (team) {
-                const fmt = team.formation && formationCoordinates[team.formation] ? team.formation : '4-3-3';
-                team.customCoordinates = JSON.parse(JSON.stringify(formationCoordinates[fmt]));
-                saveDatabase();
-                renderTacticsPitch();
-                showToast("Pitch pins reset to preset.");
-            }
-        }
-
-        function getTeamPitchSlots(team) {
-            const fmt = team.formation || '4-3-3';
-            if (team.customCoordinates && team.customCoordinates.length === 11) {
-                return team.customCoordinates;
-            }
-            if (formationCoordinates[fmt]) {
-                return JSON.parse(JSON.stringify(formationCoordinates[fmt]));
-            }
-            return JSON.parse(JSON.stringify(formationCoordinates['4-3-3']));
-        }
-
-        function renamePositionLabel(idx, newLabel) {
-            const team = appData.teams.find(t => t.id === activeTacticsTeamId);
-            if (!team) return;
-
-            if (!team.customCoordinates || team.customCoordinates.length !== 11) {
-                team.customCoordinates = getTeamPitchSlots(team);
-            }
-
-            team.customCoordinates[idx].pos = newLabel.trim() || 'POS';
-            team.formation = 'CUSTOM';
-            document.getElementById('tactics-formation-select').value = 'CUSTOM';
-            saveDatabase();
-            renderTacticsPitch();
-        }
-
-        function renderTacticsPitch() {
-            const team = appData.teams.find(t => t.id === activeTacticsTeamId);
-            if (!team) return;
-
-            const slots = getTeamPitchSlots(team);
-            const pitchSlots = document.getElementById('pitch-slots');
-            const assigner = document.getElementById('tactics-squad-assigner');
-            
-            pitchSlots.innerHTML = '';
-            assigner.innerHTML = '';
-
-            const squadPlayers = appData.players.filter(p => p.seasonId === appData.activeSeasonId && p.teamId === team.id);
-
-            slots.forEach((s, idx) => {
-                const slotKey = `pos-${idx + 1}`;
-                const assignedPlayerId = team.lineup ? team.lineup[slotKey] : null;
-                const assignedPlayer = squadPlayers.find(p => p.id === assignedPlayerId);
-
-                // Render Slot Pin on Pitch with Drag and Click Handling
-                pitchSlots.innerHTML += `
-                    <div class="absolute transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center group cursor-grab active:cursor-grabbing z-20"
-                         style="top: ${s.top}%; left: ${s.left}%;"
-                         onmousedown="startPitchDrag(event, ${idx})"
-                         ontouchstart="startPitchDrag(event, ${idx})">
-                        <div class="w-9 h-9 rounded-full bg-slate-950 border-2 border-brand-400 text-white font-mono font-bold text-xs flex items-center justify-center shadow-2xl group-hover:scale-110 group-hover:border-brand-accent transition-transform">
-                            ${assignedPlayer ? (assignedPlayer.number || s.pos) : s.pos}
-                        </div>
-                        <span class="mt-1 px-2 py-0.5 rounded bg-slate-950/90 text-[10px] font-bold text-white font-mono border border-slate-700 whitespace-nowrap shadow-lg flex items-center gap-1">
-                            <span class="text-brand-accent">${s.pos}:</span> ${assignedPlayer ? assignedPlayer.name : 'Unassigned'}
-                        </span>
+        function renderTacticalNodes(nodes) {
+            const container = document.getElementById('pitchNodesContainer');
+            container.innerHTML = nodes.map(n => `
+                <div id="node-${n.id}" 
+                     class="draggable-node absolute -translate-x-1/2 -translate-y-1/2 flex flex-col items-center cursor-grab active:cursor-grabbing"
+                     style="left: ${n.x}%; top: ${n.y}%;"
+                     onmousedown="startDrag(event, ${n.id})"
+                     ontouchstart="startDrag(event, ${n.id})">
+                    <div class="w-8 h-8 rounded-full bg-emerald-500 border-2 border-white flex items-center justify-center font-bold text-xs text-slate-900 shadow-lg">
+                        ${n.id}
                     </div>
-                `;
-
-                // Render Squad Selector Option & Editable Position Name Input in side panel
-                assigner.innerHTML += `
-                    <div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800 space-y-2">
-                        <div class="flex items-center justify-between">
-                            <input type="text" value="${s.pos}" onchange="renamePositionLabel(${idx}, this.value)" title="Click to rename position label" class="w-20 bg-slate-950 border border-slate-700 text-xs font-mono font-bold text-brand-400 px-1.5 py-0.5 rounded focus:outline-none focus:border-brand-500">
-                            <span class="text-[10px] text-slate-500 font-mono">Slot #${idx+1}</span>
-                        </div>
-                        <select onchange="assignTacticsPlayer('${slotKey}', this.value)" class="w-full bg-slate-950 border border-slate-700 text-xs text-white rounded-lg px-2 py-1 focus:outline-none">
-                            <option value="">-- Unassigned --</option>
-                            ${squadPlayers.map(p => `
-                                <option value="${p.id}" ${p.id === assignedPlayerId ? 'selected' : ''}>#${p.number} ${p.name} (${p.primaryPos})</option>
-                            `).join('')}
-                        </select>
-                    </div>
-                `;
-            });
+                    <span class="text-[10px] font-bold bg-slate-900/90 text-slate-200 px-1.5 py-0.5 rounded border border-slate-700 mt-1" id="node-label-${n.id}">${n.pos}</span>
+                </div>
+            `).join('');
         }
 
-        // --- Drag and Drop Logic ---
-        function startPitchDrag(e, idx) {
-            e.preventDefault();
-            e.stopPropagation();
-            draggingSlotIdx = idx;
+        function renderPositionCustomizer(nodes) {
+            const container = document.getElementById('positionCustomizerList');
+            container.innerHTML = nodes.map(n => `
+                <div class="flex items-center gap-3 bg-slate-900 p-2 rounded-lg border border-slate-700">
+                    <span class="w-6 h-6 rounded-full bg-slate-800 text-emerald-400 flex items-center justify-center font-bold text-xs">${n.id}</span>
+                    <input type="text" value="${n.pos}" oninput="updateNodePositionLabel(${n.id}, this.value)" class="bg-slate-800 border border-slate-700 rounded px-2 py-1 text-xs text-slate-200 focus:outline-none flex-grow">
+                </div>
+            `).join('');
         }
 
-        function updateNodePosition(clientX, clientY) {
-            if (draggingSlotIdx === null || !activeTacticsTeamId) return;
-            const container = document.getElementById('pitch-container');
-            const rect = container.getBoundingClientRect();
+        function updateNodePositionLabel(nodeId, newPos) {
+            const labelEl = document.getElementById(`node-label-${nodeId}`);
+            if (labelEl) labelEl.textContent = newPos;
+        }
+
+        let draggingNodeId = null;
+
+        function startDrag(e, nodeId) {
+            draggingNodeId = nodeId;
+            const pitch = document.getElementById('tacticalPitch');
             
-            let xPct = ((clientX - rect.left) / rect.width) * 100;
-            let yPct = ((clientY - rect.top) / rect.height) * 100;
+            const moveHandler = (event) => {
+                if (!draggingNodeId) return;
+                const rect = pitch.getBoundingClientRect();
+                const clientX = event.touches ? event.touches[0].clientX : event.clientX;
+                const clientY = event.touches ? event.touches[0].clientY : event.clientY;
 
-            xPct = Math.max(5, Math.min(95, xPct));
-            yPct = Math.max(5, Math.min(95, yPct));
+                let x = ((clientX - rect.left) / rect.width) * 100;
+                let y = ((clientY - rect.top) / rect.height) * 100;
 
-            const team = appData.teams.find(t => t.id === activeTacticsTeamId);
-            if (!team) return;
+                x = Math.max(5, Math.min(95, x));
+                y = Math.max(5, Math.min(95, y));
 
-            if (!team.customCoordinates || team.customCoordinates.length !== 11) {
-                team.customCoordinates = getTeamPitchSlots(team);
-            }
-
-            team.customCoordinates[draggingSlotIdx].left = Math.round(xPct);
-            team.customCoordinates[draggingSlotIdx].top = Math.round(yPct);
-            team.formation = 'CUSTOM';
-            document.getElementById('tactics-formation-select').value = 'CUSTOM';
-
-            renderTacticsPitch();
-        }
-
-        function handlePitchMouseMove(e) {
-            if (draggingSlotIdx !== null) {
-                updateNodePosition(e.clientX, e.clientY);
-            }
-        }
-
-        function handlePitchTouchMove(e) {
-            if (draggingSlotIdx !== null && e.touches.length > 0) {
-                updateNodePosition(e.touches[0].clientX, e.touches[0].clientY);
-            }
-        }
-
-        function handlePitchMouseUp() {
-            if (draggingSlotIdx !== null) {
-                draggingSlotIdx = null;
-                saveDatabase();
-            }
-        }
-
-        function saveCustomFormation() {
-            const team = appData.teams.find(t => t.id === activeTacticsTeamId);
-            if (team) {
-                saveDatabase();
-                showToast(`Custom pitch layout & positions saved for ${team.name}.`);
-            }
-        }
-
-        function assignTacticsPlayer(slotKey, playerId) {
-            const team = appData.teams.find(t => t.id === activeTacticsTeamId);
-            if (team) {
-                if (!team.lineup) team.lineup = {};
-                if (playerId) {
-                    team.lineup[slotKey] = playerId;
-                } else {
-                    delete team.lineup[slotKey];
+                const nodeEl = document.getElementById(`node-${draggingNodeId}`);
+                if (nodeEl) {
+                    nodeEl.style.left = `${x}%`;
+                    nodeEl.style.top = `${y}%`;
                 }
-                saveDatabase();
-                renderTacticsPitch();
-            }
+            };
+
+            const stopDrag = () => {
+                draggingNodeId = null;
+                window.removeEventListener('mousemove', moveHandler);
+                window.removeEventListener('mouseup', stopDrag);
+                window.removeEventListener('touchmove', moveHandler);
+                window.removeEventListener('touchend', stopDrag);
+            };
+
+            window.addEventListener('mousemove', moveHandler);
+            window.addEventListener('mouseup', stopDrag);
+            window.addEventListener('touchmove', moveHandler);
+            window.addEventListener('touchend', stopDrag);
         }
 
-        // ================= TAB 4: PLAYERS & ROSTER =================
+        // Players CRUD
         function renderPlayers() {
-            const search = (document.getElementById('player-search').value || '').toLowerCase();
-            const teamFilter = document.getElementById('player-team-filter').value;
-            const grid = document.getElementById('players-grid');
-            grid.innerHTML = '';
+            const grid = document.getElementById('playersGrid');
+            const search = document.getElementById('playerSearch').value.toLowerCase();
+            const players = state.players.filter(p => p.name.toLowerCase().includes(search));
 
-            const teamFilterSelect = document.getElementById('player-team-filter');
-            const currentVal = teamFilterSelect.value;
-            teamFilterSelect.innerHTML = '<option value="ALL">All Teams</option>';
-            appData.teams.filter(t => t.seasonId === appData.activeSeasonId).forEach(t => {
-                teamFilterSelect.innerHTML += `<option value="${t.id}">${t.name}</option>`;
-            });
-            teamFilterSelect.value = currentVal;
-
-            const activePlayers = appData.players.filter(p => p.seasonId === appData.activeSeasonId);
-            const filtered = activePlayers.filter(p => {
-                const matchSearch = p.name.toLowerCase().includes(search) || p.primaryPos.toLowerCase().includes(search);
-                const matchTeam = teamFilter === 'ALL' || p.teamId === teamFilter;
-                return matchSearch && matchTeam;
-            });
-
-            if (filtered.length === 0) {
-                grid.innerHTML = `<div class="col-span-full text-center py-12 text-slate-500 text-xs">No players matching criteria.</div>`;
+            if (players.length === 0) {
+                grid.innerHTML = `<div class="col-span-full text-center py-8 text-slate-500">No players found.</div>`;
                 return;
             }
 
-            filtered.forEach(p => {
-                const team = appData.teams.find(t => t.id === p.teamId);
-                const stats = getPlayerAccumulatedStats(p.id);
-                const defaultPhoto = `https://placehold.co/150x150/1e293b/ffffff?text=${encodeURIComponent(p.name.substring(0, 2).toUpperCase())}`;
-
-                grid.innerHTML += `
-                    <div class="glass-card rounded-3xl p-5 flex flex-col justify-between hover:border-slate-700 transition shadow-xl relative group">
-                        <div class="absolute top-4 right-4 font-black text-2xl text-slate-800 font-mono group-hover:text-slate-700">#${p.number}</div>
-                        <div>
-                            <div class="flex items-center space-x-3 mb-3">
-                                <img src="${p.photo || defaultPhoto}" onerror="this.src='${defaultPhoto}'" class="w-12 h-12 rounded-full object-cover bg-slate-950 border border-brand-500 cursor-pointer shadow-md" onclick="viewPlayerProfile('${p.id}')">
-                                <div>
-                                    <h3 class="font-bold text-sm text-white leading-tight cursor-pointer hover:text-brand-400 transition" onclick="viewPlayerProfile('${p.id}')">${p.name}</h3>
-                                    <p class="text-[10px] text-brand-400 font-bold font-mono">${p.primaryPos} ${p.secondaryPos !== 'NONE' ? `/ ${p.secondaryPos}` : ''}</p>
-                                    <p class="text-[11px] text-slate-400">${team ? team.name : 'Free Agent'}</p>
-                                </div>
-                            </div>
-                            <div class="grid grid-cols-4 gap-1 text-center bg-slate-950 p-2 rounded-2xl border border-slate-800 mb-2 font-mono">
-                                <div><span class="block text-[8px] text-slate-500 uppercase">Apps</span><span class="text-xs font-bold text-white">${stats.apps}</span></div>
-                                <div><span class="block text-[8px] text-emerald-400 uppercase">Goals</span><span class="text-xs font-bold text-emerald-400">${stats.goals}</span></div>
-                                <div><span class="block text-[8px] text-brand-accent uppercase">Ast</span><span class="text-xs font-bold text-brand-accent">${stats.assists}</span></div>
-                                <div><span class="block text-[8px] text-amber-400 uppercase">Rating</span><span class="text-xs font-bold text-amber-300">${stats.avgRating}</span></div>
+            grid.innerHTML = players.map(p => {
+                const team = state.teams.find(t => t.id === p.teamId);
+                return `
+                    <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 flex flex-col justify-between cursor-pointer hover:border-slate-500 transition" onclick="openPlayerProfile('${p.id}')">
+                        <div class="flex items-center gap-3 mb-3">
+                            <img src="${p.photo || 'https://via.placeholder.com/50'}" class="w-12 h-12 rounded-full object-cover border border-emerald-400 bg-slate-900">
+                            <div>
+                                <h4 class="font-bold text-slate-200 text-sm">${p.name}</h4>
+                                <p class="text-xs text-slate-400">#${p.number} • ${p.position}</p>
                             </div>
                         </div>
-                        <div class="mt-3 pt-2 border-t border-slate-800/60 flex justify-between items-center">
-                            <button onclick="viewPlayerProfile('${p.id}')" class="text-xs font-bold text-brand-400 hover:text-brand-300 flex items-center gap-1">
-                                <i class="fa-solid fa-eye"></i> View Profile
+                        <div class="flex justify-between items-center pt-2 border-t border-slate-700">
+                            <span class="text-xs text-slate-400">${team ? team.name : 'Unassigned'}</span>
+                            <button onclick="event.stopPropagation(); deletePlayer('${p.id}')" class="px-2 py-1 bg-red-600/20 text-red-400 hover:bg-red-600 hover:text-white rounded text-xs font-bold transition">
+                                Delete
                             </button>
-                            <div class="flex items-center space-x-1">
-                                <button onclick="openPlayerModal('${p.id}')" class="text-slate-400 hover:text-white p-1"><i class="fa-solid fa-pen text-xs"></i></button>
-                                <button onclick="deletePlayer('${p.id}')" title="Delete Player" class="text-slate-400 hover:text-rose-400 p-1"><i class="fa-solid fa-trash-can text-xs"></i></button>
-                            </div>
                         </div>
                     </div>
                 `;
-            });
+            }).join('');
         }
 
-        function viewPlayerProfile(playerId) {
-            const player = appData.players.find(p => p.id === playerId);
-            if (!player) return;
+        function openPlayerModal() {
+            const teamSelect = document.getElementById('playerTeamId');
+            teamSelect.innerHTML = state.teams
+                .filter(t => t.season === state.activeSeason)
+                .map(t => `<option value="${t.id}">${t.name}</option>`).join('');
 
-            const team = appData.teams.find(t => t.id === player.teamId);
-            const stats = getPlayerAccumulatedStats(playerId);
-            const defaultPhoto = `https://placehold.co/150x150/1e293b/ffffff?text=${encodeURIComponent(player.name.substring(0, 2).toUpperCase())}`;
-            const playerTransfers = (appData.transfers || []).filter(t => t.playerId === playerId);
-
-            const playerLogs = [];
-            appData.matches.forEach(m => {
-                if (m.playerStats) {
-                    const ps = m.playerStats.find(x => x.playerId === playerId);
-                    if (ps && ps.minutes > 0) {
-                        const comp = appData.competitions.find(c => c.id === m.competitionId);
-                        const opponentId = player.teamId === m.homeTeamId ? m.awayTeamId : m.homeTeamId;
-                        const opponent = appData.teams.find(t => t.id === opponentId);
-                        playerLogs.push({ match: m, comp, opponent, stats: ps });
-                    }
-                }
-            });
-
-            const content = document.getElementById('player-view-content');
-            content.innerHTML = `
-                <div class="flex flex-col sm:flex-row items-center sm:items-start space-y-4 sm:space-y-0 sm:space-x-6 pb-6 border-b border-slate-800">
-                    <img src="${player.photo || defaultPhoto}" onerror="this.src='${defaultPhoto}'" class="w-24 h-24 rounded-2xl object-cover bg-slate-950 border-2 border-brand-500 shadow-xl">
-                    <div class="text-center sm:text-left space-y-1">
-                        <div class="flex items-center justify-center sm:justify-start space-x-2">
-                            <span class="px-2 py-0.5 rounded bg-brand-950 text-brand-400 font-mono font-bold text-xs border border-brand-800">#${player.number}</span>
-                            <h2 class="text-2xl font-black text-white">${player.name}</h2>
-                        </div>
-                        <p class="text-xs font-mono text-brand-400 font-bold">${player.primaryPos} ${player.secondaryPos !== 'NONE' ? `/ ${player.secondaryPos}` : ''}</p>
-                        <p class="text-xs text-slate-300"><i class="fa-solid fa-shield-halved text-brand-400 mr-1.5"></i>${team ? team.name : 'Free Agent'}</p>
-                        ${player.bio ? `<p class="text-xs text-slate-400 italic pt-1">${player.bio}</p>` : ''}
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 my-6 font-mono text-center">
-                    <div class="bg-slate-950 p-3 rounded-2xl border border-slate-800"><span class="block text-[9px] text-slate-500 uppercase">Apps</span><span class="text-lg font-black text-white">${stats.apps}</span></div>
-                    <div class="bg-slate-950 p-3 rounded-2xl border border-slate-800"><span class="block text-[9px] text-emerald-400 uppercase">Goals</span><span class="text-lg font-black text-emerald-400">${stats.goals}</span></div>
-                    <div class="bg-slate-950 p-3 rounded-2xl border border-slate-800"><span class="block text-[9px] text-brand-accent uppercase">Assists</span><span class="text-lg font-black text-brand-accent">${stats.assists}</span></div>
-                    <div class="bg-slate-950 p-3 rounded-2xl border border-slate-800"><span class="block text-[9px] text-amber-400 uppercase">Cards (Y/R)</span><span class="text-lg font-black text-amber-400">${stats.yellows}/${stats.reds}</span></div>
-                    <div class="bg-slate-950 p-3 rounded-2xl border border-slate-800"><span class="block text-[9px] text-indigo-400 uppercase">Avg Rating</span><span class="text-lg font-black text-indigo-300">${stats.avgRating}</span></div>
-                </div>
-
-                <div class="space-y-4">
-                    <h3 class="text-xs font-bold text-white uppercase font-mono tracking-wider flex items-center gap-2"><i class="fa-solid fa-clock-rotate-left text-brand-400"></i> Match Log History</h3>
-                    <div class="overflow-x-auto custom-scrollbar max-h-48">
-                        <table class="w-full text-left text-xs text-slate-300">
-                            <thead class="bg-slate-950 text-[10px] uppercase text-slate-400 border-b border-slate-800 font-mono">
-                                <tr>
-                                    <th class="py-2 px-2">Date</th>
-                                    <th class="py-2 px-2">Opponent</th>
-                                    <th class="py-2 px-2 text-center">Min</th>
-                                    <th class="py-2 px-2 text-center text-emerald-400">Goals</th>
-                                    <th class="py-2 px-2 text-center text-brand-accent">Ast</th>
-                                    <th class="py-2 px-2 text-center text-amber-300">Rating</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-slate-800/50 font-medium">
-                                ${playerLogs.length === 0 ? '<tr><td colspan="6" class="py-3 text-center text-slate-500">No match records found.</td></tr>' : 
-                                  playerLogs.map(l => `
-                                    <tr>
-                                        <td class="py-2 px-2 font-mono text-[11px]">${l.match.date}</td>
-                                        <td class="py-2 px-2 font-semibold text-white">vs ${l.opponent ? l.opponent.name : 'Opponent'}</td>
-                                        <td class="py-2 px-2 text-center font-mono">${l.stats.minutes}'</td>
-                                        <td class="py-2 px-2 text-center font-mono text-emerald-400 font-bold">${l.stats.goals}</td>
-                                        <td class="py-2 px-2 text-center font-mono text-brand-accent font-bold">${l.stats.assists}</td>
-                                        <td class="py-2 px-2 text-center font-mono text-amber-300 font-bold">${l.stats.rating || '-'}</td>
-                                    </tr>
-                                  `).join('')}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                ${playerTransfers.length > 0 ? `
-                    <div class="space-y-3 pt-4 border-t border-slate-800">
-                        <h3 class="text-xs font-bold text-white uppercase font-mono tracking-wider flex items-center gap-2"><i class="fa-solid fa-right-left text-brand-accent"></i> Transfer History</h3>
-                        <div class="space-y-2">
-                            ${playerTransfers.map(tr => {
-                                const fromTeam = appData.teams.find(t => t.id === tr.fromTeamId);
-                                const toTeam = appData.teams.find(t => t.id === tr.toTeamId);
-                                return `
-                                    <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 text-xs flex justify-between items-center">
-                                        <span class="font-semibold text-slate-300">${fromTeam ? fromTeam.name : 'Free Agent'} &rarr; <strong class="text-white">${toTeam ? toTeam.name : 'Unknown'}</strong></span>
-                                        <span class="text-[10px] text-slate-400 font-mono">${tr.date} ${tr.note ? `(${tr.note})` : ''}</span>
-                                    </div>
-                                `;
-                            }).join('')}
-                        </div>
-                    </div>
-                ` : ''}
-            `;
-
-            document.getElementById('modal-player-view').classList.remove('hidden');
+            document.getElementById('playerForm').reset();
+            document.getElementById('playerEditId').value = '';
+            document.getElementById('playerModal').classList.remove('hidden');
         }
 
-        function openPlayerModal(playerId = null) {
-            const modal = document.getElementById('modal-player');
-            const title = document.getElementById('modal-player-title');
-            const teamSelect = document.getElementById('player-team-select');
-            
-            teamSelect.innerHTML = '<option value="">Free Agent / Unassigned</option>';
-            appData.teams.filter(t => t.seasonId === appData.activeSeasonId).forEach(t => {
-                teamSelect.innerHTML += `<option value="${t.id}">${t.name}</option>`;
-            });
-
-            if (playerId) {
-                const player = appData.players.find(p => p.id === playerId);
-                if (!player) return;
-                title.innerText = 'Edit Player Profile';
-                document.getElementById('player-id-input').value = player.id;
-                document.getElementById('player-name').value = player.name;
-                document.getElementById('player-number').value = player.number || 7;
-                document.getElementById('player-pos-1').value = player.primaryPos || 'ST';
-                document.getElementById('player-pos-2').value = player.secondaryPos || 'NONE';
-                document.getElementById('player-team-select').value = player.teamId || '';
-                document.getElementById('player-photo').value = player.photo || '';
-                document.getElementById('player-bio').value = player.bio || '';
-            } else {
-                title.innerText = 'Add Player Profile';
-                document.getElementById('form-player').reset();
-                document.getElementById('player-id-input').value = '';
-            }
-
-            modal.classList.remove('hidden');
+        function closePlayerModal() {
+            document.getElementById('playerModal').classList.add('hidden');
         }
 
         function savePlayer(e) {
             e.preventDefault();
-            const id = document.getElementById('player-id-input').value;
-
-            const playerData = {
-                id: id || ('p-' + Date.now()),
-                seasonId: appData.activeSeasonId,
-                name: document.getElementById('player-name').value.trim(),
-                number: parseInt(document.getElementById('player-number').value) || 7,
-                primaryPos: document.getElementById('player-pos-1').value,
-                secondaryPos: document.getElementById('player-pos-2').value,
-                teamId: document.getElementById('player-team-select').value,
-                photo: document.getElementById('player-photo').value.trim(),
-                bio: document.getElementById('player-bio').value.trim()
+            const id = document.getElementById('playerEditId').value || 'p_' + Date.now();
+            const player = {
+                id,
+                name: document.getElementById('playerName').value.trim(),
+                teamId: document.getElementById('playerTeamId').value,
+                number: parseInt(document.getElementById('playerNumber').value),
+                position: document.getElementById('playerPosition').value.trim(),
+                photo: document.getElementById('playerPhoto').value.trim()
             };
 
-            if (id) {
-                const idx = appData.players.findIndex(p => p.id === id);
-                if (idx !== -1) appData.players[idx] = playerData;
+            const existingIdx = state.players.findIndex(p => p.id === id);
+            if (existingIdx > -1) {
+                state.players[existingIdx] = player;
             } else {
-                appData.players.push(playerData);
+                state.players.push(player);
             }
 
-            saveDatabase();
-            closeModal('modal-player');
+            saveLocalStorage();
+            closePlayerModal();
             renderPlayers();
-            showToast(`Player "${playerData.name}" saved.`);
         }
 
-        function deletePlayer(playerId) {
-            const player = appData.players.find(p => p.id === playerId);
-            if (!player) return;
-
-            if (confirm(`Are you sure you want to delete player "${player.name}"?`)) {
-                appData.players = appData.players.filter(p => p.id !== playerId);
-                appData.teams.forEach(t => {
-                    if (t.lineup) {
-                        Object.keys(t.lineup).forEach(k => {
-                            if (t.lineup[k] === playerId) delete t.lineup[k];
-                        });
-                    }
-                });
-                saveDatabase();
+        function deletePlayer(id) {
+            if (confirm("Delete this player?")) {
+                state.players = state.players.filter(p => p.id !== id);
+                saveLocalStorage();
                 renderPlayers();
-                showToast(`Player "${player.name}" deleted.`);
             }
         }
 
-        function openTransferModal() {
-            const modal = document.getElementById('modal-transfer');
-            const pSel = document.getElementById('transfer-player-select');
-            const tSel = document.getElementById('transfer-team-select');
-
-            pSel.innerHTML = '';
-            tSel.innerHTML = '<option value="">Free Agent</option>';
-
-            appData.players.filter(p => p.seasonId === appData.activeSeasonId).forEach(p => {
-                const currentTeam = appData.teams.find(t => t.id === p.teamId);
-                pSel.innerHTML += `<option value="${p.id}">${p.name} (${currentTeam ? currentTeam.name : 'Free Agent'})</option>`;
-            });
-
-            appData.teams.filter(t => t.seasonId === appData.activeSeasonId).forEach(t => {
-                tSel.innerHTML += `<option value="${t.id}">${t.name}</option>`;
-            });
-
-            modal.classList.remove('hidden');
-        }
-
-        function executePlayerTransfer(e) {
-            e.preventDefault();
-            const playerId = document.getElementById('transfer-player-select').value;
-            const newTeamId = document.getElementById('transfer-team-select').value;
-            const note = document.getElementById('transfer-note').value.trim();
-
-            const player = appData.players.find(p => p.id === playerId);
+        function openPlayerProfile(id) {
+            const player = state.players.find(p => p.id === id);
             if (!player) return;
 
-            const oldTeamId = player.teamId;
-            player.teamId = newTeamId;
-
-            if (!appData.transfers) appData.transfers = [];
-            appData.transfers.push({
-                id: 'tr-' + Date.now(),
-                playerId: playerId,
-                fromTeamId: oldTeamId,
-                toTeamId: newTeamId,
-                date: new Date().toISOString().split('T')[0],
-                note: note
-            });
-
-            saveDatabase();
-            closeModal('modal-transfer');
-            renderPlayers();
-            showToast(`Transfer completed for ${player.name}`);
-        }
-
-        // ================= TAB 5: MATCH LOGS & STATS =================
-        function renderMatches() {
-            const list = document.getElementById('matches-list');
-            list.innerHTML = '';
-            const matches = appData.matches.filter(m => {
-                const comp = appData.competitions.find(c => c.id === m.competitionId);
-                return comp && comp.seasonId === appData.activeSeasonId;
-            });
-
-            if (matches.length === 0) {
-                list.innerHTML = `<div class="text-center py-12 text-slate-500 text-xs">No match logs recorded for this season yet.</div>`;
-                return;
-            }
-
-            matches.sort((a,b) => new Date(b.date) - new Date(a.date)).forEach(m => {
-                const comp = appData.competitions.find(c => c.id === m.competitionId);
-                const home = appData.teams.find(t => t.id === m.homeTeamId);
-                const away = appData.teams.find(t => t.id === m.awayTeamId);
-
-                list.innerHTML += `
-                    <div class="glass-card rounded-2xl p-4 flex flex-col md:flex-row items-center justify-between gap-4 shadow-xl">
-                        <div class="flex items-center space-x-3 text-xs">
-                            <span class="px-2 py-0.5 rounded bg-slate-950 font-mono text-slate-400 border border-slate-800">${m.date}</span>
-                            <span class="font-bold text-brand-400 font-mono">${comp ? comp.name : 'Cup'}</span>
-                            <span class="text-slate-500">• ${m.round}</span>
-                        </div>
-                        <div class="flex items-center space-x-6 text-sm font-bold font-mono">
-                            <span class="${m.homeScore > m.awayScore ? 'text-white' : 'text-slate-400'}">${home ? home.name : 'Home'}</span>
-                            <span class="bg-slate-950 px-3 py-1 rounded-xl text-brand-gold border border-slate-800">${m.homeScore} - ${m.awayScore}</span>
-                            <span class="${m.awayScore > m.homeScore ? 'text-white' : 'text-slate-400'}">${away ? away.name : 'Away'}</span>
-                        </div>
-                        <button onclick="deleteMatch('${m.id}')" title="Delete Match Record" class="text-slate-400 hover:text-rose-400 p-1.5"><i class="fa-solid fa-trash-can text-xs"></i></button>
-                    </div>
-                `;
-            });
-        }
-
-        function openMatchModal() {
-            const modal = document.getElementById('modal-match');
-            const compSel = document.getElementById('match-comp-select');
-            compSel.innerHTML = '';
+            const team = state.teams.find(t => t.id === player.teamId);
+            document.getElementById('profilePhoto').src = player.photo || 'https://via.placeholder.com/50';
+            document.getElementById('profileName').textContent = player.name;
+            document.getElementById('profileTeamPos').textContent = `${team ? team.name : 'Unassigned'} • #${player.number} ${player.position}`;
             
-            const comps = appData.competitions.filter(c => c.seasonId === appData.activeSeasonId);
-            comps.forEach(c => {
-                compSel.innerHTML += `<option value="${c.id}">${c.name}</option>`;
-            });
-
-            document.getElementById('match-date').value = new Date().toISOString().split('T')[0];
-            updateMatchTeamsDropdown();
-            modal.classList.remove('hidden');
-        }
-
-        function updateMatchTeamsDropdown() {
-            const compId = document.getElementById('match-comp-select').value;
-            const homeSel = document.getElementById('match-home-team');
-            const awaySel = document.getElementById('match-away-team');
-
-            homeSel.innerHTML = '';
-            awaySel.innerHTML = '';
-
-            const teams = appData.teams.filter(t => t.seasonId === appData.activeSeasonId && t.competitionIds && t.competitionIds.includes(compId));
-            
-            teams.forEach((t, i) => {
-                homeSel.innerHTML += `<option value="${t.id}" ${i === 0 ? 'selected' : ''}>${t.name}</option>`;
-                awaySel.innerHTML += `<option value="${t.id}" ${i === 1 ? 'selected' : ''}>${t.name}</option>`;
-            });
-
-            renderPerGamePlayerStatsInputs();
-        }
-
-        function renderPerGamePlayerStatsInputs() {
-            const homeId = document.getElementById('match-home-team').value;
-            const awayId = document.getElementById('match-away-team').value;
-            const container = document.getElementById('match-player-stats-inputs');
-            container.innerHTML = '';
-
-            const players = appData.players.filter(p => p.seasonId === appData.activeSeasonId && (p.teamId === homeId || p.teamId === awayId));
-
-            if (players.length === 0) {
-                container.innerHTML = `<p class="text-xs text-slate-500">No registered players for selected home/away teams.</p>`;
-                return;
-            }
-
-            players.forEach(p => {
-                const team = appData.teams.find(t => t.id === p.teamId);
-                container.innerHTML += `
-                    <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 grid grid-cols-1 sm:grid-cols-6 gap-2 items-center text-xs">
-                        <div class="sm:col-span-2">
-                            <span class="font-bold text-white block">${p.name}</span>
-                            <span class="text-[10px] text-slate-400 font-mono">${team ? team.name : ''} • #${p.number}</span>
-                        </div>
-                        <div>
-                            <label class="block text-[8px] uppercase text-slate-500">Minutes</label>
-                            <input type="number" data-player-id="${p.id}" class="ps-min w-full bg-slate-900 border border-slate-700 rounded px-1.5 py-0.5 text-xs text-white" value="90">
-                        </div>
-                        <div>
-                            <label class="block text-[8px] uppercase text-emerald-400">Goals</label>
-                            <input type="number" data-player-id="${p.id}" class="ps-goals w-full bg-slate-900 border border-slate-700 rounded px-1.5 py-0.5 text-xs text-white" value="0">
-                        </div>
-                        <div>
-                            <label class="block text-[8px] uppercase text-cyan-400">Assists</label>
-                            <input type="number" data-player-id="${p.id}" class="ps-assists w-full bg-slate-900 border border-slate-700 rounded px-1.5 py-0.5 text-xs text-white" value="0">
-                        </div>
-                        <div>
-                            <label class="block text-[8px] uppercase text-amber-400">Rating</label>
-                            <input type="number" step="0.1" max="10" min="0" data-player-id="${p.id}" class="ps-rating w-full bg-slate-900 border border-slate-700 rounded px-1.5 py-0.5 text-xs text-white" value="7.0">
-                        </div>
-                    </div>
-                `;
-            });
-        }
-
-        function saveMatchRecord(e) {
-            e.preventDefault();
-            const compId = document.getElementById('match-comp-select').value;
-            const homeId = document.getElementById('match-home-team').value;
-            const awayId = document.getElementById('match-away-team').value;
-            const homeScore = parseInt(document.getElementById('match-home-score').value) || 0;
-            const awayScore = parseInt(document.getElementById('match-away-score').value) || 0;
-
-            if (homeId === awayId) {
-                alert("Home and Away teams must be different!");
-                return;
-            }
-
-            const pStats = [];
-            document.querySelectorAll('.ps-min').forEach(input => {
-                const pid = input.getAttribute('data-player-id');
-                const min = parseInt(input.value) || 0;
-                const goals = parseInt(document.querySelector(`.ps-goals[data-player-id="${pid}"]`)?.value) || 0;
-                const assists = parseInt(document.querySelector(`.ps-assists[data-player-id="${pid}"]`)?.value) || 0;
-                const rating = parseFloat(document.querySelector(`.ps-rating[data-player-id="${pid}"]`)?.value) || 7.0;
-
-                if (min > 0) {
-                    pStats.push({ playerId: pid, minutes: min, goals: goals, assists: assists, rating: rating });
-                }
-            });
-
-            const matchData = {
-                id: 'match-' + Date.now(),
-                competitionId: compId,
-                date: document.getElementById('match-date').value,
-                round: document.getElementById('match-round').value.trim() || 'Regular',
-                homeTeamId: homeId,
-                awayTeamId: awayId,
-                homeScore: homeScore,
-                awayScore: awayScore,
-                playerStats: pStats
+            document.getElementById('profileDeleteBtn').onclick = () => {
+                deletePlayer(player.id);
+                closePlayerProfileModal();
             };
 
-            appData.matches.push(matchData);
-            saveDatabase();
-            closeModal('modal-match');
-            renderMatches();
-            renderDashboard();
-            showToast("Match record saved.");
+            document.getElementById('playerProfileModal').classList.remove('hidden');
         }
 
-        function deleteMatch(matchId) {
-            if (confirm("Are you sure you want to delete this match log? Player stats from this game will also be removed.")) {
-                appData.matches = appData.matches.filter(m => m.id !== matchId);
-                saveDatabase();
-                renderMatches();
-                renderDashboard();
-                showToast("Match record deleted.");
-            }
+        function closePlayerProfileModal() {
+            document.getElementById('playerProfileModal').classList.add('hidden');
         }
 
-        // ================= TAB 6: JSON IMPORT/EXPORT =================
-        function exportDatabaseJSON() {
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appData, null, 2));
-            const dlAnchorElem = document.createElement('a');
-            dlAnchorElem.setAttribute("href", dataStr);
-            dlAnchorElem.setAttribute("download", `pitchmaster_pro_db_${new Date().toISOString().split('T')[0]}.json`);
-            document.body.appendChild(dlAnchorElem);
-            dlAnchorElem.click();
-            dlAnchorElem.remove();
+        // JSON Import/Export
+        function exportData() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state, null, 2));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", `pitchmaster_backup_${Date.now()}.json`);
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
         }
 
-        function importDatabaseJSON(event) {
+        function importData(e) {
             const fileReader = new FileReader();
-            fileReader.onload = function(e) {
+            fileReader.onload = (event) => {
                 try {
-                    const parsed = JSON.parse(e.target.result);
-                    if (parsed.seasons && parsed.teams) {
-                        appData = parsed;
-                        saveDatabase();
-                        initApp();
-                        showToast("Database restored successfully!");
-                    } else {
-                        alert("Invalid PitchMaster database JSON structure.");
-                    }
-                } catch (err) {
-                    alert("Error parsing JSON file.");
+                    const importedState = JSON.parse(event.target.result);
+                    state = importedState;
+                    saveLocalStorage();
+                    location.reload();
+                } catch(err) {
+                    alert("Invalid JSON file.");
                 }
             };
-            fileReader.readAsText(event.target.files[0]);
+            fileReader.readAsText(e.target.files[0]);
         }
-
-        function resetToDemoData() {
-            if (confirm("Are you sure you want to reset all data to default demo state? Custom edits will be overwritten.")) {
-                appData = getInitialDemoData();
-                saveDatabase();
-                initApp();
-                showToast("Factory demo state restored.");
-            }
-        }
-
-        function closeModal(id) {
-            document.getElementById(id).classList.add('hidden');
-        }
-
-        // Boot system on DOM Ready
-        window.addEventListener('DOMContentLoaded', () => {
-            initApp();
-            switchTab('dashboard');
-        });
     </script>
 </body>
 </html>
