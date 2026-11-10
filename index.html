@@ -128,8 +128,8 @@
                     <select id="season-selector" onchange="changeSeason(this.value)" class="bg-transparent text-xs font-mono font-bold text-brand-400 border-none focus:outline-none cursor-pointer">
                         <!-- Populated Dynamically -->
                     </select>
-                    <button onclick="openSeasonModal()" class="text-slate-400 hover:text-white transition p-1 text-xs" title="Manage / Create Season">
-                        <i class="fa-solid fa-plus-circle"></i>
+                    <button onclick="openSeasonModal()" class="text-slate-400 hover:text-white transition p-1 text-xs" title="Manage / Create Seasons">
+                        <i class="fa-solid fa-gear"></i>
                     </button>
                 </div>
 
@@ -171,8 +171,8 @@
                     <!-- Dynamic -->
                 </select>
             </div>
-            <button onclick="openSeasonModal()" class="px-3 py-1 bg-slate-800 text-white rounded-lg text-xs font-bold">
-                + New Season
+            <button onclick="openSeasonModal()" class="px-3 py-1 bg-slate-800 text-white rounded-lg text-xs font-bold flex items-center gap-1.5">
+                <i class="fa-solid fa-gear"></i> Manage
             </button>
         </div>
 
@@ -579,43 +579,43 @@
                 </div>
             </div>
 
-            <!-- Pitch Visual Container -->
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <!-- Grass Field Graphics (2/3) -->
-                <div class="lg:col-span-2 pitch-bg rounded-2xl h-[480px] p-4 relative border-2 border-white/20 shadow-2xl overflow-hidden flex flex-col justify-between select-none" 
-                     id="pitch-container" 
-                     onmousemove="handlePitchMouseMove(event)" 
-                     onmouseup="handlePitchMouseUp()" 
-                     onmouseleave="handlePitchMouseUp()" 
-                     ontouchmove="handlePitchTouchMove(event)" 
-                     ontouchend="handlePitchMouseUp()">
-                    
-                    <!-- Pitch Markings Overlay -->
-                    <div class="absolute inset-x-0 top-0 h-16 border-b-2 border-white/30 rounded-b-full pointer-events-none"></div>
-                    <div class="absolute inset-x-0 bottom-0 h-16 border-t-2 border-white/30 rounded-t-full pointer-events-none"></div>
-                    <div class="absolute inset-y-[40%] left-0 w-8 border-r-2 border-white/30 pointer-events-none"></div>
-                    <div class="absolute inset-y-[40%] right-0 w-8 border-l-2 border-white/30 pointer-events-none"></div>
-                    <div class="absolute inset-0 m-auto w-32 h-32 border-2 border-white/30 rounded-full pointer-events-none"></div>
-                    <div class="absolute inset-x-0 top-1/2 border-b border-white/20 pointer-events-none"></div>
-
-                    <!-- Dynamic Drag Instruction Badge -->
-                    <div class="absolute top-2 left-2 z-20 bg-slate-950/80 backdrop-blur-sm border border-slate-800 rounded-lg px-2.5 py-1 text-[10px] font-mono text-brand-400 flex items-center gap-1.5 pointer-events-none">
-                        <i class="fa-solid fa-arrows-up-down-left-right animate-pulse"></i> Drag any node on pitch • Rename labels in squad panel
-                    </div>
-
-                    <!-- Tactical Starting XI Slots Rendered via JS -->
-                    <div id="pitch-slots" class="w-full h-full relative z-10">
-                        <!-- Dynamic Position Pins -->
-                    </div>
+    <!-- Season Manager Modal -->
+    <div id="modal-season" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="glass-panel rounded-3xl max-w-lg w-full p-6 space-y-5 border border-slate-800 shadow-2xl relative max-h-[90vh] overflow-y-auto custom-scrollbar">
+            <button onclick="closeModal('modal-season')" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            <h3 class="text-lg font-bold text-white flex items-center gap-2"><i class="fa-solid fa-calendar-days text-brand-400"></i> Season Manager</h3>
+            
+            <!-- Create New Season Box -->
+            <form id="form-season" onsubmit="saveSeason(event)" class="space-y-4 bg-slate-950 p-4 rounded-2xl border border-slate-800">
+                <h4 class="text-xs font-bold font-mono text-brand-400 uppercase tracking-wider">Create New Season</h4>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">Season Name (e.g. 2025/26)</label>
+                    <input type="text" id="season-name-input" required placeholder="2025/26" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-500">
                 </div>
-
-                <!-- Squad Selector Side Panel (1/3) -->
-                <div class="space-y-4 bg-slate-950 p-4 rounded-2xl border border-slate-800">
-                    <h4 class="text-xs font-bold uppercase font-mono text-slate-300">Squad & Position Roles</h4>
-                    <div id="tactics-squad-assigner" class="space-y-3 max-h-[400px] overflow-y-auto custom-scrollbar pr-1">
-                        <!-- Dynamic Player Selectors & Position Title Editors -->
-                    </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">Clone Data from Existing Season?</label>
+                    <select id="season-clone-select" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-300">
+                        <option value="NONE">Start Fresh (Empty Competitions/Rosters)</option>
+                        <!-- Dynamic Season Options -->
+                    </select>
                 </div>
+                <div class="flex justify-end pt-1">
+                    <button type="submit" class="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white text-xs font-bold rounded-xl shadow-lg transition">
+                        <i class="fa-solid fa-plus mr-1"></i> Add Season
+                    </button>
+                </div>
+            </form>
+
+            <!-- Reorder & Manage Existing Seasons -->
+            <div class="space-y-3">
+                <h4 class="text-xs font-bold font-mono text-slate-300 uppercase tracking-wider">Manage & Reorder Existing Seasons</h4>
+                <div id="seasons-management-list" class="space-y-2">
+                    <!-- Dynamically Populated List of Seasons -->
+                </div>
+            </div>
+
+            <div class="flex justify-end pt-2 border-t border-slate-800">
+                <button type="button" onclick="closeModal('modal-season')" class="px-4 py-2 bg-slate-800 text-slate-300 text-xs font-bold rounded-xl">Close</button>
             </div>
         </div>
     </div>
@@ -976,14 +976,107 @@
             });
         }
 
+        function renderSeasonsManagementList() {
+            const list = document.getElementById('seasons-management-list');
+            list.innerHTML = '';
+
+            appData.seasons.forEach((s, idx) => {
+                const isActive = s.id === appData.activeSeasonId;
+                list.innerHTML += `
+                    <div class="bg-slate-950 p-3 rounded-2xl border ${isActive ? 'border-brand-500/60 bg-brand-950/20' : 'border-slate-800'} flex items-center justify-between gap-2">
+                        <div class="flex items-center space-x-2 flex-grow">
+                            <!-- Reorder Controls -->
+                            <div class="flex flex-col space-y-1">
+                                <button onclick="reorderSeason(${idx}, -1)" ${idx === 0 ? 'disabled class="opacity-20 text-slate-500"' : 'class="text-slate-400 hover:text-white"'} title="Move Up">
+                                    <i class="fa-solid fa-chevron-up text-[10px]"></i>
+                                </button>
+                                <button onclick="reorderSeason(${idx}, 1)" ${idx === appData.seasons.length - 1 ? 'disabled class="opacity-20 text-slate-500"' : 'class="text-slate-400 hover:text-white"'} title="Move Down">
+                                    <i class="fa-solid fa-chevron-down text-[10px]"></i>
+                                </button>
+                            </div>
+
+                            <!-- Editable Season Name -->
+                            <input type="text" value="${s.name}" onchange="renameSeason('${s.id}', this.value)" class="bg-slate-900 border border-slate-700 text-xs font-mono font-bold text-white px-2.5 py-1 rounded-xl focus:outline-none focus:border-brand-500 flex-grow max-w-[160px]">
+                            
+                            ${isActive ? `
+                                <span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-brand-950 text-brand-400 border border-brand-800">ACTIVE</span>
+                            ` : `
+                                <button onclick="changeSeason('${s.id}')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] font-bold rounded-xl transition">Set Active</button>
+                            `}
+                        </div>
+
+                        <!-- Delete Season -->
+                        <button onclick="deleteSeason('${s.id}')" class="text-slate-400 hover:text-rose-400 p-1.5 transition" title="Delete Season">
+                            <i class="fa-solid fa-trash-can text-xs"></i>
+                        </button>
+                    </div>
+                `;
+            });
+        }
+
+        function reorderSeason(index, direction) {
+            const newIndex = index + direction;
+            if (newIndex < 0 || newIndex >= appData.seasons.length) return;
+
+            const temp = appData.seasons[index];
+            appData.seasons[index] = appData.seasons[newIndex];
+            appData.seasons[newIndex] = temp;
+
+            saveDatabase();
+            renderSeasonDropdowns();
+            renderSeasonsManagementList();
+            showToast("Season order updated.");
+        }
+
+        function renameSeason(seasonId, newName) {
+            const season = appData.seasons.find(s => s.id === seasonId);
+            const trimmed = newName.trim();
+            if (season && trimmed) {
+                season.name = trimmed;
+                saveDatabase();
+                renderSeasonDropdowns();
+                renderSeasonsManagementList();
+                showToast(`Season renamed to "${trimmed}".`);
+            }
+        }
+
+        function deleteSeason(seasonId) {
+            if (appData.seasons.length <= 1) {
+                alert("Cannot delete the only season. You must have at least one season active.");
+                return;
+            }
+
+            const season = appData.seasons.find(s => s.id === seasonId);
+            if (!season) return;
+
+            if (confirm(`Are you sure you want to delete Season "${season.name}"? All associated competitions, teams, players, and match records for this season will be deleted.`)) {
+                appData.seasons = appData.seasons.filter(s => s.id !== seasonId);
+                appData.competitions = appData.competitions.filter(c => c.seasonId !== seasonId);
+                appData.teams = appData.teams.filter(t => t.seasonId !== seasonId);
+                appData.players = appData.players.filter(p => p.seasonId !== seasonId);
+                
+                // Switch active season if the active one was deleted
+                if (appData.activeSeasonId === seasonId) {
+                    appData.activeSeasonId = appData.seasons[0].id;
+                }
+
+                saveDatabase();
+                initApp();
+                renderSeasonsManagementList();
+                showToast(`Season "${season.name}" deleted.`);
+            }
+        }
+
         function changeSeason(seasonId) {
             appData.activeSeasonId = seasonId;
             saveDatabase();
             initApp();
+            renderSeasonsManagementList();
             showToast(`Switched to Season ${appData.seasons.find(s => s.id === seasonId)?.name}`);
         }
 
         function openSeasonModal() {
+            renderSeasonsManagementList();
             document.getElementById('modal-season').classList.remove('hidden');
         }
 
@@ -1018,8 +1111,9 @@
 
             appData.activeSeasonId = newId;
             saveDatabase();
-            closeModal('modal-season');
+            document.getElementById('season-name-input').value = '';
             initApp();
+            renderSeasonsManagementList();
             showToast(`New Season "${name}" Created.`);
         }
 
